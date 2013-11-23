@@ -43,9 +43,9 @@ uint8_t numberMotor;
 
 float throttleCmd = 2000.0f;
 
-float motor[8] = { 2000.0f, 2000.0f, 2000.0f, 2000.0f, 2000.0f, 2000.0f, 2000.0f, 2000.0f, };
+float motor[6] = { 2000.0f, 2000.0f, 2000.0f, 2000.0f, 2000.0f, 2000.0f, };
 
-float servo[2] = { 3000.0f, 3000.0f, };
+float servo[4] = { 3000.0f, 3000.0f, 3000.0f, 3000.0f, };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Initialize Mixer
@@ -55,6 +55,11 @@ void initMixer(void)
 {
     switch (eepromConfig.mixerConfiguration)
     {
+        case MIXERTYPE_TRI:
+            numberMotor = 3;
+            motor[5] = eepromConfig.triYawServoMid;
+            break;
+
         case MIXERTYPE_QUADX:
             numberMotor = 4;
             break;
@@ -73,6 +78,8 @@ void writeServos(void)
 {
     pwmServoWrite(0, (uint16_t)servo[0]);
     pwmServoWrite(1, (uint16_t)servo[1]);
+    pwmServoWrite(2, (uint16_t)servo[2]);
+    pwmServoWrite(3, (uint16_t)servo[3]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -85,6 +92,9 @@ void writeMotors(void)
 
     for (i = 0; i < numberMotor; i++)
         pwmEscWrite(i, (uint16_t)motor[i]);
+
+    if (eepromConfig.mixerConfiguration == MIXERTYPE_TRI)
+    	pwmEscWrite(5, (uint16_t)motor[5]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -133,6 +143,19 @@ void mixTable(void)
 
     switch ( eepromConfig.mixerConfiguration )
     {
+        ///////////////////////////////
+
+        case MIXERTYPE_TRI:
+            motor[0] = PIDMIX(  1.0f, -0.666667f, 0.0f );  // Left  CW
+            motor[1] = PIDMIX( -1.0f, -0.666667f, 0.0f );  // Right CCW
+            motor[2] = PIDMIX(  0.0f,  1.333333f, 0.0f );  // Rear  CW or CCW
+
+            motor[5] = constrain( eepromConfig.triYawServoMid + eepromConfig.yawDirection * axisPID[YAW],
+                                  eepromConfig.triYawServoMin, eepromConfig.triYawServoMax );
+            break;
+
+        ///////////////////////////////
+
         case MIXERTYPE_QUADX:
             motor[0] = PIDMIX(  1.0f, -1.0f, -1.0f );      // Front Left  CW
             motor[1] = PIDMIX( -1.0f, -1.0f,  1.0f );      // Front Right CCW

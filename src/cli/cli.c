@@ -329,6 +329,15 @@ void cliCom(void)
         	validCliCommand = false;
         	break;
 
+        ///////////////////////////////
+
+        case 'm': // Axis PIDs
+        	cliPrintF("%9.4f, %9.4f, %9.4f\n", axisPID[ROLL ],
+           			                           axisPID[PITCH],
+           			                           axisPID[YAW  ]);
+           	validCliCommand = false;
+           	break;
+
        ///////////////////////////////
 
         case 'o':
@@ -455,14 +464,12 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'v': // ESC PWM Outputs
-        	cliPrintF("%4ld, ", TIM15->CCR1 );
-        	cliPrintF("%4ld, ", TIM15->CCR2 );
-        	cliPrintF("%4ld, ", TIM3->CCR1  );
-        	cliPrintF("%4ld, ", TIM3->CCR2  );
-        	cliPrintF("%4ld, ", TIM4->CCR1  );
-        	cliPrintF("%4ld, ", TIM4->CCR2  );
-        	cliPrintF("%4ld, ", TIM4->CCR3  );
-        	cliPrintF("%4ld\n", TIM4->CCR4  );
+        	cliPrintF("%4ld, ", TIM2->CCR1 );
+        	cliPrintF("%4ld, ", TIM2->CCR2 );
+            cliPrintF("%4ld, ", TIM15->CCR1);
+        	cliPrintF("%4ld, ", TIM15->CCR2);
+        	cliPrintF("%4ld, ", TIM3->CCR1 );
+        	cliPrintF("%4ld\n", TIM3->CCR2 );
 
         	validCliCommand = false;
             break;
@@ -470,8 +477,10 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'w': // Servo PWM Outputs
-        	cliPrintF("%4ld, ", TIM2->CCR1);
-        	cliPrintF("%4ld\n", TIM2->CCR2);
+        	cliPrintF("%4ld, ", TIM4->CCR1);
+        	cliPrintF("%4ld, ", TIM4->CCR2);
+        	cliPrintF("%4ld, ", TIM4->CCR3);
+        	cliPrintF("%4ld\n", TIM4->CCR4);
 
             validCliCommand = false;
             break;
@@ -755,7 +764,7 @@ void cliCom(void)
    		    }
 
    		    cliPrint("\n");
-   		    cliPrint("'m' Not Used                               'M' Not Used\n");
+   		    cliPrint("'m' Axis PIDs                              'M' Not Used\n");
    		    cliPrint("'n' Not Used                               'N' Mixer CLI\n");
    		    cliPrint("'o' Battery Voltage                        'O' Receiver CLI\n");
    		    cliPrint("'p' Not Used                               'P' Sensor CLI\n");

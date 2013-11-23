@@ -71,6 +71,10 @@ void mixerCLI()
                 cliPrint("\nMixer Configuration:  ");
                 switch (eepromConfig.mixerConfiguration)
                 {
+                    case MIXERTYPE_TRI:
+                        cliPrint("   MIXERTYPE TRI\n");
+                        break;
+
                     case MIXERTYPE_QUADX:
                         cliPrint("MIXERTYPE QUAD X\n");
                         break;
@@ -81,8 +85,23 @@ void mixerCLI()
                 }
 
                 cliPrintF("Number of Motors:                    %1d\n",  numberMotor);
-                cliPrintF("ESC PWM Rate:                      %3ld\n", eepromConfig.escPwmRate);
+                cliPrintF("ESC PWM Rate:                      %3ld\n",   eepromConfig.escPwmRate);
                 cliPrintF("Servo PWM Rate:                    %3ld\n\n", eepromConfig.servoPwmRate);
+
+                if (eepromConfig.yawDirection == 1.0f)
+                	cliPrintF("Yaw Direction:                  Normal\n\n");
+                else if (eepromConfig.yawDirection == -1.0f)
+                	cliPrintF("Yaw Direction:                 Reverse\n\n");
+                else
+                	cliPrintF("Yaw Direction:               Undefined\n\n");
+
+                if (eepromConfig.mixerConfiguration == MIXERTYPE_TRI)
+                {
+					cliPrintF("TriCopter Yaw Servo PWM Rate:      %3ld\n",  eepromConfig.triYawServoPwmRate);
+                    cliPrintF("TriCopter Yaw Servo Min PWM:      %4ld\n",   (uint16_t)eepromConfig.triYawServoMin);
+                    cliPrintF("TriCopter Yaw Servo Mid PWM:      %4ld\n",   (uint16_t)eepromConfig.triYawServoMid);
+                    cliPrintF("TriCopter Yaw Servo Max PWM:      %4ld\n\n", (uint16_t)eepromConfig.triYawServoMax);
+			    }
 
                 validQuery = false;
                 break;
@@ -99,7 +118,9 @@ void mixerCLI()
 
             case 'A': // Read Mixer Configuration
                 eepromConfig.mixerConfiguration = (uint8_t)readFloatCLI();
+
                 initMixer();
+                pwmEscInit();
 
         	    mixerQuery = 'a';
                 validQuery = true;
@@ -111,8 +132,8 @@ void mixerCLI()
                 eepromConfig.escPwmRate   = (uint16_t)readFloatCLI();
                 eepromConfig.servoPwmRate = (uint16_t)readFloatCLI();
 
-                pwmEscInit(eepromConfig.escPwmRate);
-                pwmServoInit(eepromConfig.servoPwmRate);
+                pwmEscInit();
+                pwmServoInit();
 
                 mixerQuery = 'a';
                 validQuery = true;
@@ -120,7 +141,33 @@ void mixerCLI()
 
             ///////////////////////////
 
-            case 'M': // Read yaw direction
+            case 'C': // Read TriCopter Yaw Servo Parameters
+            	if (eepromConfig.mixerConfiguration == MIXERTYPE_TRI)
+            	{
+            		eepromConfig.triYawServoPwmRate = (uint16_t)readFloatCLI();
+            	    eepromConfig.triYawServoMin     = readFloatCLI();
+                    eepromConfig.triYawServoMid     = readFloatCLI();
+                    eepromConfig.triYawServoMax     = readFloatCLI();
+
+                    pwmEscInit();
+            	}
+                else
+                {
+                	tempFloat = readFloatCLI();
+                	tempFloat = readFloatCLI();
+                	tempFloat = readFloatCLI();
+                	tempFloat = readFloatCLI();
+
+                	cliPrintF("\nTriCopter Mixing not Selected....\n\n");
+                }
+
+                mixerQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'D': // Read yaw direction
                 tempFloat = readFloatCLI();
                 if (tempFloat >= 0.0)
                     tempFloat = 1.0;
@@ -144,11 +191,12 @@ void mixerCLI()
 
 			case '?':
 			   	cliPrint("\n");
-			   	cliPrint("'a' Mixer Configuration Data               'A' Set Mixer Configuration              A1, A2\n");
+			   	cliPrint("'a' Mixer Configuration Data               'A' Set Mixer Configuration              A0 thru 2, see ff32_Naze32Pro.h\n");
    		        cliPrint("                                           'B' Set PWM Rates                        BESC;Servo\n");
-			   	cliPrint("                                           'M' Set Yaw Direction                    M1 or M-1\n");
+   		        cliPrint("                                           'C' Set TriCopter Servo Parameters       CRate;Min;Mid;Max\n");
+			   	cliPrint("                                           'D' Set Yaw Direction                    D1 or D-1\n");
    		        cliPrint("                                           'W' Write EEPROM Parameters\n");
-   		        cliPrint("'x' Exit Sensor CLI                        '?' Command Summary\n");
+   		        cliPrint("'x' Exit Mixer CLI                        '?' Command Summary\n");
    		        cliPrint("\n");
 	    	    break;
 

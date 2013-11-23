@@ -328,7 +328,7 @@ void systemInit(void)
     LED0_ON;
 
     batteryInit();
-    pwmServoInit(eepromConfig.servoPwmRate);
+    pwmServoInit();
 
     if (eepromConfig.receiverType == SPEKTRUM)
         spektrumInit();
