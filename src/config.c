@@ -43,7 +43,7 @@
 
 const char rcChannelLetters[] = "AERT1234";
 
-static uint8_t checkNewEEPROMConf = 3;
+static uint8_t checkNewEEPROMConf = 4;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -220,7 +220,7 @@ void checkFirstTime(bool eepromReset)
 	    eepromConfig.escPwmRate   = 450;
         eepromConfig.servoPwmRate = 50;
 
-        eepromConfig.mixerConfiguration = MIXERTYPE_QUADX;
+        eepromConfig.mixerConfiguration = MIXERTYPE_TRI;
         eepromConfig.yawDirection = 1.0f;
 
         eepromConfig.triYawServoPwmRate = 50;
