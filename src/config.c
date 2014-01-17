@@ -43,7 +43,7 @@
 
 const char rcChannelLetters[] = "AERT1234";
 
-static uint8_t checkNewEEPROMConf = 4;
+static uint8_t checkNewEEPROMConf = 5;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -100,34 +100,57 @@ void readEEPROM(void)
 
 uint8_t writeEEPROM(void)
 {
+    FLASH_Status status;
+    int32_t i;
+
+    //uint32_t       *dst = (uint32_t*)FLASH_WRITE_EEPROM_ADDR;
+    eepromConfig_t *src = &eepromConfig;
+
     // there's no reason to write these values to EEPROM, they'll just be noise
     zeroPIDintegralError();
     zeroPIDstates();
 
-    FLASH_Status status;
-
-    int i;
-	uint32_t       *dst = (uint32_t*)FLASH_WRITE_EEPROM_ADDR;
-    eepromConfig_t *src = &eepromConfig;
-
-    if ( src->CRCFlags & CRC_HistoryBad )
+    if (src->CRCFlags & CRC_HistoryBad)
         evrPush(EVR_ConfigBadHistory,0);
 
-    src->CRCAtEnd[0] = crc32B( (uint32_t*)&src[0], src->CRCAtEnd);
+    eepromConfig.CRCAtEnd[0] = crc32B( (uint32_t*)&src[0], src->CRCAtEnd);
 
     FLASH_Unlock();
 
     FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPERR);
 
-    i = -1;
-
     status = FLASH_ErasePage(FLASH_WRITE_EEPROM_ADDR);
 
-    while ( status == FLASH_COMPLETE && i++ < eepromConfigNUMWORD )
-        status = FLASH_ProgramWord((uint32_t)&dst[i], ((uint32_t*)src)[i]);
+    //-----------------------------------------------------
 
-    if ( status != FLASH_COMPLETE )
-        evrPush( -1 == i ? EVR_FlashEraseFail : EVR_FlashProgramFail, status);
+    //i = -1;
+
+    //while (status == FLASH_COMPLETE && i++ < eepromConfigNUMWORD)
+    //    status = FLASH_ProgramWord((uint32_t)&dst[i], ((uint32_t*)src)[i]);
+
+    //if (status != FLASH_COMPLETE)
+    //    evrPush( i == -1 ? EVR_FlashEraseFail : EVR_FlashProgramFail, status);
+
+    //-----------------------------------------------------
+
+    if (status == FLASH_COMPLETE)
+    {
+        for (i = 0; i < sizeof(eepromConfig_t); i += 4)
+        {
+            status = FLASH_ProgramWord(FLASH_WRITE_EEPROM_ADDR + i, *(uint32_t *)((char *)&eepromConfig + i));
+            if (status != FLASH_COMPLETE)
+            {
+                evrPush(EVR_FlashProgramFail, status);
+                break;
+			}
+        }
+    }
+    else
+    {
+		evrPush(EVR_FlashEraseFail, status);
+	}
+
+    //-----------------------------------------------------
 
     FLASH_Lock();
 
@@ -390,6 +413,8 @@ void checkFirstTime(bool eepromReset)
 		eepromConfig.activeTelemetry        =  0;
 
 		eepromConfig.verticalVelocityHoldOnly = true;
+
+		eepromConfig.CRCFlags = 0;
 
         writeEEPROM();
 	}
