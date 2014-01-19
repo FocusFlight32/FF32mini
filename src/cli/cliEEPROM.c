@@ -122,8 +122,8 @@ void eepromCLI()
                 cliPrintF("Config structure information:\n");
                 cliPrintF("Version          : %d\n", eepromConfig.version );
                 cliPrintF("Size             : %d\n", sizeof(eepromConfig) );
-                cliPrintF("CRC on last read : %08x\n", c1 );
-                cliPrintF("Current CRC      : %08x\n", c2 );
+                cliPrintF("CRC on last read : %08X\n", c1 );
+                cliPrintF("Current CRC      : %08X\n", c2 );
 
                 if ( c1 != c2 )
                     cliPrintF("  CRCs differ. Current Config has not yet been saved.\n");

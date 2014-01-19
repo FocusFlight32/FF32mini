@@ -471,6 +471,7 @@ void spektrumInit(void)
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority        = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd                = ENABLE;
+
     NVIC_Init(&NVIC_InitStructure);
 
     TIM_TimeBaseStructure.TIM_Period            = 100 - 1;             // 100 1 uSec Ticks
