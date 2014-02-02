@@ -103,11 +103,14 @@ void receiverCLI()
 				cliPrintF("Min Throttle:                   %4ld\n",   (uint16_t)eepromConfig.minThrottle);
 				cliPrintF("Max Thottle:                    %4ld\n\n", (uint16_t)eepromConfig.maxThrottle);
 
-				tempFloat = eepromConfig.rateScaling * 180000.0 / PI;
-				cliPrintF("Max Rate Command:               %6.2f DPS\n", tempFloat);
+				tempFloat = eepromConfig.rollAndPitchRateScaling * 180000.0 / PI;
+				cliPrintF("Max Roll and Pitch Rate Cmd:    %6.2f DPS\n", tempFloat);
+
+				tempFloat = eepromConfig.yawRateScaling * 180000.0 / PI;
+				cliPrintF("Max Yaw Rate Cmd:               %6.2f DPS\n", tempFloat);
 
 				tempFloat = eepromConfig.attitudeScaling * 180000.0 / PI;
-                cliPrintF("Max Attitude Command:           %6.2f Degrees\n\n", tempFloat);
+                cliPrintF("Max Attitude Cmd:               %6.2f Degrees\n\n", tempFloat);
 
 				cliPrintF("Arm Delay Count:                %3d Frames\n",   eepromConfig.armCount);
 				cliPrintF("Disarm Delay Count:             %3d Frames\n\n", eepromConfig.disarmCount);
@@ -205,7 +208,8 @@ void receiverCLI()
             ///////////////////////////
 
             case 'F': // Read Max Rate Value
-                eepromConfig.rateScaling = readFloatCLI() / 180000.0f * PI;
+                eepromConfig.rollAndPitchRateScaling = readFloatCLI() / 180000.0f * PI;
+                eepromConfig.yawRateScaling          = readFloatCLI() / 180000.0f * PI;
 
                 receiverQuery = 'a';
                 validQuery = true;
@@ -234,9 +238,9 @@ void receiverCLI()
 			   	cliPrint("'a' Receiver Configuration Data            'A' Toggle PPM/Spektrum Receiver\n");
    		        cliPrint("                                           'B' Set RC Control Order                 BTAER1234\n");
 			   	cliPrint("                                           'C' Toggle Slave Spektrum State\n");
-			   	cliPrint("                                           'D' Set RC Control Points                EmidCmd;minChk;maxChk;minThrot;maxThrot\n");
-			   	cliPrint("                                           'E' Set Arm/Disarm Counts                FarmCount;disarmCount\n");
-			   	cliPrint("                                           'F' Set Maximum Rate Command\n");
+			   	cliPrint("                                           'D' Set RC Control Points                DmidCmd;minChk;maxChk;minThrot;maxThrot\n");
+			   	cliPrint("                                           'E' Set Arm/Disarm Counts                EarmCount;disarmCount\n");
+			   	cliPrint("                                           'F' 'F' Set Maximum Rate Commands        FRP;Y RP = Roll/Pitch, Y = Yaw\n");
 			   	cliPrint("                                           'G' Set Maximum Attitude Command\n");
 			   	cliPrint("                                           'W' Write EEPROM Parameters\n");
 			   	cliPrint("'x' Exit Receiver CLI                      '?' Command Summary\n");
