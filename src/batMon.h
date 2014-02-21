@@ -13,8 +13,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern volatile uint8_t batMonLowWarning;
-extern volatile uint8_t batMonVeryLowWarning;
+extern uint8_t batMonLowWarning;
+extern uint8_t batMonVeryLowWarning;
 
 extern uint8_t batteryNumCells;
 

@@ -229,6 +229,8 @@ void receiverCLI()
             case 'W': // Write EEPROM Parameters
                 cliPrint("\nWriting EEPROM Parameters....\n\n");
                 writeEEPROM();
+
+                validQuery = false;
                 break;
 
 			///////////////////////////
@@ -240,7 +242,7 @@ void receiverCLI()
 			   	cliPrint("                                           'C' Toggle Slave Spektrum State\n");
 			   	cliPrint("                                           'D' Set RC Control Points                DmidCmd;minChk;maxChk;minThrot;maxThrot\n");
 			   	cliPrint("                                           'E' Set Arm/Disarm Counts                EarmCount;disarmCount\n");
-			   	cliPrint("                                           'F' 'F' Set Maximum Rate Commands        FRP;Y RP = Roll/Pitch, Y = Yaw\n");
+			   	cliPrint("                                           'F' Set Maximum Rate Commands            FRP;Y RP = Roll/Pitch, Y = Yaw\n");
 			   	cliPrint("                                           'G' Set Maximum Attitude Command\n");
 			   	cliPrint("                                           'W' Write EEPROM Parameters\n");
 			   	cliPrint("'x' Exit Receiver CLI                      '?' Command Summary\n");

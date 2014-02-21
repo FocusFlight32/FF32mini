@@ -33,7 +33,7 @@ constStrArr_t evrError = {
     "Primary Spektrum Frame Lost",
     "Slave Spektrum Frame Lost",
     "RC Data Lost",
-    "Battery dangerously Low!",
+    "Battery Dangerously Low!",
     "Flash CRC failed! Bad History Set",
     "Flash erase failed",
     "Flash programming failed"

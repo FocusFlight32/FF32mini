@@ -329,6 +329,10 @@ void systemInit(void)
 
     delay(10000);  // 10 seconds of 20 second delay for sensor stabilization
 
+    #ifdef __VERSION__
+        cliPrintF("\ngcc version " __VERSION__ "\n");
+    #endif
+
     cliPrintF("\nFF32mini Firmware V%s, Build Date " __DATE__ " "__TIME__" \n", __FF32MINI_VERSION);
 
     if ((RCC->CR & RCC_CR_HSERDY) != RESET)

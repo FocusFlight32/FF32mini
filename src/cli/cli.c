@@ -707,7 +707,7 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'W': // Write EEPROM Parameters
-            cliPrint("\nWriting EEPROM Parameters....\n");
+            cliPrint("\nWriting EEPROM Parameters....\n\n");
             writeEEPROM();
 
             cliQuery = 'x';

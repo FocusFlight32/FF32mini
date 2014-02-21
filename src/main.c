@@ -268,7 +268,7 @@ int main(void)
 			if (execUp == true)
 			    LED0_TOGGLE;
 
-			while (batMonVeryLowWarning > 0)
+			if (batMonVeryLowWarning > 0)
 			{
 				BEEP_TOGGLE;
 				batMonVeryLowWarning--;
@@ -296,7 +296,7 @@ int main(void)
 			    pwmEscInit();
 			}
 
-			while (batMonLowWarning > 0)
+			if (batMonLowWarning > 0)
 			{
 				BEEP_TOGGLE;
 				batMonLowWarning--;
