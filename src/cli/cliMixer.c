@@ -332,7 +332,7 @@ void mixerCLI()
 
 			case '?':
 			   	cliPrint("\n");
-			   	cliPrint("'a' Mixer Configuration Data               'A' Set Mixer Configuration              A0 thru 2, see ff32_Naze32Pro.h\n");
+			   	cliPrint("'a' Mixer Configuration Data               'A' Set Mixer Configuration              A0 thru 3, see ff32_Naze32Pro.h\n");
    		        cliPrint("                                           'B' Set PWM Rates                        BESC;Servo\n");
    		        cliPrint("                                           'D' Set Yaw Direction                    D1 or D-1\n");
 

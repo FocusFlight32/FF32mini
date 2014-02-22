@@ -294,14 +294,14 @@ void systemInit(void)
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2,   ENABLE);
 
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,   ENABLE);  // PWM Servo Out 1 & 2
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,   ENABLE);  // PWM ESC Out 3 & 4
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4,   ENABLE);  // PWM ESC Out 5,6,7, & 8
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1,   ENABLE);  // PPM RX
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,   ENABLE);  // PWM ESC Out 1 & 2
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,   ENABLE);  // PWM ESC Out 5 & 6
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4,   ENABLE);  // PWM Servo Out 1, 2, 3, & 4
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6,   ENABLE);  // 500 Hz dt Counter
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7,   ENABLE);  // 100 Hz dt Counter
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM15,  ENABLE);  // PWM ESC Out 1 & 2
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM16,  ENABLE);  // PPM RX
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17,  ENABLE);  // Spektrum Frame Sync
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM15,  ENABLE);  // PWM ESC Out 3 & 4
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17,  ENABLE);  // Spektrum Frame Sync
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);  // Telemetry
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);  // Spektrum RX
@@ -358,7 +358,6 @@ void systemInit(void)
 
     delay(10000);  // Remaining 10 seconds of 20 second delay for sensor stabilization - probably not long enough..
 
-
     LED0_ON;
 
     batteryInit();
@@ -373,6 +372,7 @@ void systemInit(void)
     timingFunctionsInit();
 
     initFirstOrderFilter();
+    initMavlink();
     initPID();
 
     initMPU6000();

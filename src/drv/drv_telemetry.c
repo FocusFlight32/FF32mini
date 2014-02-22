@@ -70,7 +70,8 @@ volatile uint16_t tx1BufferHead = 0;
 
 static void uart1TxDMA(void)
 {
-    DMA1_Channel4->CMAR = (uint32_t)&tx1Buffer[tx1BufferTail];
+	DMA1_Channel4->CMAR = (uint32_t)&tx1Buffer[tx1BufferTail];
+
     if (tx1BufferHead > tx1BufferTail)
     {
     	DMA1_Channel4->CNDTR = tx1BufferHead - tx1BufferTail;
@@ -282,6 +283,23 @@ void telemetryPrintF(const char * fmt, ...)
 	vsnprintf(buf, sizeof(buf), fmt, vlist);
 	telemetryPrint(buf);
 	va_end(vlist);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Telemetry Print Binary String
+///////////////////////////////////////////////////////////////////////////////
+
+void telemetryPrintBinary(uint8_t *buf, uint16_t length)
+{
+    uint16_t i;
+
+   for (i = 0; i < length; i++)
+    {
+    	tx1Buffer[tx1BufferHead] = buf[i];
+    	tx1BufferHead = (tx1BufferHead + 1) % UART1_BUFFER_SIZE;
+    }
+
+	uart1TxDMA();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

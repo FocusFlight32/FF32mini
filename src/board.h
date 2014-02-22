@@ -61,6 +61,8 @@
 #include "usb_desc.h"
 #include "usb_pwr.h"
 
+#include "mavlink.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "pid.h"
@@ -96,8 +98,10 @@
 #include "flightCommand.h"
 #include "MargAHRS.h"
 #include "magCalibration.h"
+#include "mavlinkStrings.h"
 #include "mpu6000Calibration.h"
 #include "mixer.h"
+#include "rfTelem.h"
 #include "utilities.h"
 #include "vertCompFilter.h"
 #include "watchdogs.h"

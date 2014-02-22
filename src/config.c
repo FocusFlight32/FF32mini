@@ -43,7 +43,7 @@
 
 const char rcChannelLetters[] = "AERT1234";
 
-static uint8_t checkNewEEPROMConf = 3;
+static uint8_t checkNewEEPROMConf = 4;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -124,7 +124,7 @@ uint8_t writeEEPROM(void)
     if (src->CRCFlags & CRC_HistoryBad)
         evrPush(EVR_ConfigBadHistory,0);
 
-    eepromConfig.CRCAtEnd[0] = crc32B( (uint32_t*)&src[0], src->CRCAtEnd);
+    src->CRCAtEnd[0] = crc32B( (uint32_t*)&src[0], src->CRCAtEnd);
 
     FLASH_Unlock();
 
@@ -438,16 +438,19 @@ void checkFirstTime(bool eepromReset)
 
         eepromConfig.magVar                 =  9.033333f * D2R;  // Albuquerque, NM Mag Var 9 degrees 2 minutes (+ East, - West)
 
-		eepromConfig.batteryCells           = 3;
-		eepromConfig.voltageMonitorScale    = 11.0f / 1.0f;
-		eepromConfig.voltageMonitorBias     = 0.0f;
+		eepromConfig.batteryCells             = 3;
+		eepromConfig.voltageMonitorScale      = 11.0f / 1.0f;
+		eepromConfig.voltageMonitorBias       = 0.0f;
 
-		eepromConfig.armCount               =  50;
-		eepromConfig.disarmCount            =  0;
+		eepromConfig.armCount                 =  50;
+		eepromConfig.disarmCount              =  0;
 
-		eepromConfig.activeTelemetry        =  0;
+		eepromConfig.activeTelemetry          =  0;
+		eepromConfig.mavlinkEnabled           =  false;
 
 		eepromConfig.verticalVelocityHoldOnly = true;
+
+		eepromConfig.gpsBaudRate              = 38400;
 
 		eepromConfig.CRCFlags = 0;
 

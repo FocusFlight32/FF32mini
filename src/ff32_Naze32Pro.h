@@ -289,12 +289,22 @@ typedef struct eepromConfig_t
 
     uint16_t activeTelemetry;
 
+    uint8_t  mavlinkEnabled;
+
     ///////////////////////////////////
 
     uint8_t verticalVelocityHoldOnly;
 
+    ///////////////////////////////////
+
+    uint32_t gpsBaudRate;
+
+    ///////////////////////////////////
+
     uint8_t  CRCFlags;
     uint32_t CRCAtEnd[1];
+
+    ///////////////////////////////////
 
 } eepromConfig_t;
 
