@@ -124,8 +124,8 @@ int main(void)
 
             if (eepromConfig.mavlinkEnabled == true)
             {
-				//mavlinkSendAttitude();
-				//mavlinkSendVfrHud();
+				mavlinkSendAttitude();
+				mavlinkSendVfrHud();
 			}
 			else
 			{
@@ -315,7 +315,7 @@ int main(void)
             if (eepromConfig.mavlinkEnabled == true)
             {
 				mavlinkSendHeartbeat();
-				//mavlinkSendBattery();
+				mavlinkSendBattery();
 			}
 
 			executionTime1Hz = micros() - currentTime;

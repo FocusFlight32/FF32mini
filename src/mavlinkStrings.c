@@ -62,10 +62,10 @@ void initMavlink(void)
 {
 	mavlink_system.sysid   = 20;                  // @todo Future EEPROM Candidate ID 20 for this vehicle
 	mavlink_system.compid  = MAV_COMP_ID_IMU;     // The component sending the message is the IMU
-	mavlink_system.type    = MAV_TYPE_QUADROTOR;  // @todo Future EEPROM Candidate System Type
+	mavlink_system.type    = MAV_TYPE_TRICOPTER;  // @todo Future EEPROM Candidate System Type
 
 	// Define the system type
-	system_type    = MAV_TYPE_QUADROTOR;          // @todo Future EEPROM Candidate
+	system_type    = MAV_TYPE_TRICOPTER;          // @todo Future EEPROM Candidate
 	autopilot_type = MAV_AUTOPILOT_GENERIC;
 
 	system_mode    = MAV_MODE_PREFLIGHT;          // Booting up

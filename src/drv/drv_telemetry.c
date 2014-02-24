@@ -64,12 +64,17 @@ volatile uint8_t  tx1Buffer[UART1_BUFFER_SIZE];
 volatile uint16_t tx1BufferTail = 0;
 volatile uint16_t tx1BufferHead = 0;
 
+volatile uint8_t  tx1DmaEnabled = false;
+
 ///////////////////////////////////////////////////////////////////////////////
 // UART1 Transmit via DMA
 ///////////////////////////////////////////////////////////////////////////////
 
 static void uart1TxDMA(void)
 {
+	if ((tx1DmaEnabled == true) || (tx1BufferHead == tx1BufferTail))  // Ignore call if already active or no new data in buffer
+        return;
+
 	DMA1_Channel4->CMAR = (uint32_t)&tx1Buffer[tx1BufferTail];
 
     if (tx1BufferHead > tx1BufferTail)
@@ -83,6 +88,8 @@ static void uart1TxDMA(void)
 	    tx1BufferTail = 0;
     }
 
+    tx1DmaEnabled = true;
+
     DMA_Cmd(DMA1_Channel4, ENABLE);
 }
 
@@ -95,8 +102,9 @@ void DMA1_Channel4_IRQHandler(void)
 	DMA_ClearITPendingBit(DMA1_IT_TC4);
     DMA_Cmd(DMA1_Channel4, DISABLE);
 
-    if (tx1BufferHead != tx1BufferTail)
-	    uart1TxDMA();
+    tx1DmaEnabled = false;
+
+    uart1TxDMA();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -246,9 +254,7 @@ void telemetryWrite(uint8_t ch)
     tx1Buffer[tx1BufferHead] = ch;
     tx1BufferHead = (tx1BufferHead + 1) % UART1_BUFFER_SIZE;
 
-    // if DMA wasn't enabled, fire it up
-    if (!(DMA1_Channel4->CCR & 1))
-        uart1TxDMA();
+    uart1TxDMA();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -263,9 +269,7 @@ void telemetryPrint(char *str)
     	tx1BufferHead = (tx1BufferHead + 1) % UART1_BUFFER_SIZE;
     }
 
-    // if DMA wasn't enabled, enable it
-    if (!(DMA1_Channel4->CCR & 1))
-        uart1TxDMA();
+    uart1TxDMA();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
