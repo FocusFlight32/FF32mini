@@ -119,9 +119,13 @@ void sensorCLI()
                 else
                 	cliPrint("Vertical Velocity and Altitude Hold\n\n");
 
-                cliPrintF("Voltage Monitor Scale:     %9.4f\n", eepromConfig.voltageMonitorScale);
-                cliPrintF("Voltage Monitor Bias:      %9.4f\n", eepromConfig.voltageMonitorBias);
+                cliPrintF("Voltage Monitor Scale:     %9.4f\n",    eepromConfig.voltageMonitorScale);
+                cliPrintF("Voltage Monitor Bias:      %9.4f\n",    eepromConfig.voltageMonitorBias);
                 cliPrintF("Number of Battery Cells:      %1d\n\n", eepromConfig.batteryCells);
+
+                cliPrintF("Battery Low Setpoint:      %4.2f volts\n",   eepromConfig.batteryLow);
+                cliPrintF("Battery Very Low Setpoint: %4.2f volts\n",   eepromConfig.batteryVeryLow);
+                cliPrintF("Battery Max Low Setpoint:  %4.2f volts\n\n", eepromConfig.batteryMaxLow);
 
                 validQuery = false;
                 break;
@@ -242,6 +246,21 @@ void sensorCLI()
 
             ///////////////////////////
 
+            case 'M': // Set Voltage Monitor Trip Points
+                eepromConfig.batteryLow     = readFloatCLI();
+                eepromConfig.batteryVeryLow = readFloatCLI();
+                eepromConfig.batteryMaxLow  = readFloatCLI();
+
+                thresholds[BATTERY_LOW].value      = eepromConfig.batteryLow;
+                thresholds[BATTERY_VERY_LOW].value = eepromConfig.batteryVeryLow;
+                thresholds[BATTRY_MAX_LOW].value   = eepromConfig.batteryMaxLow;
+
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
             case 'V': // Set Voltage Monitor Parameters
                 eepromConfig.voltageMonitorScale = readFloatCLI();
                 eepromConfig.voltageMonitorBias  = readFloatCLI();
@@ -269,6 +288,7 @@ void sensorCLI()
 			   	cliPrint("'c' Magnetometer Calibration               'C' Set kpAcc/kiAcc                      CKpAcc;KiAcc\n");
 			   	cliPrint("                                           'D' Set kpMag/kiMag                      DKpMag;KiMag\n");
 			   	cliPrint("                                           'E' Set h dot est/h est Comp Filter A/B  EA;B\n");
+			   	cliPrint("                                           'M' Set Voltage Monitor Trip Points      Mlow;veryLow;maxLow\n");
 			   	cliPrint("'v' Toggle Vertical Velocity Hold Only     'V' Set Voltage Monitor Parameters       Vscale;bias;cells\n");
 			    cliPrint("                                           'W' Write EEPROM Parameters\n");
 			    cliPrint("'x' Exit Sensor CLI                        '?' Command Summary\n");

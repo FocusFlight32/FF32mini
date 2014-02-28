@@ -43,7 +43,7 @@
 
 const char rcChannelLetters[] = "AERT1234";
 
-static uint8_t checkNewEEPROMConf = 4;
+static uint8_t checkNewEEPROMConf = 5;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -442,7 +442,11 @@ void checkFirstTime(bool eepromReset)
 		eepromConfig.voltageMonitorScale      = 11.0f / 1.0f;
 		eepromConfig.voltageMonitorBias       = 0.0f;
 
-		eepromConfig.armCount                 =  50;
+		eepromConfig.batteryLow               = 3.30f;
+        eepromConfig.batteryVeryLow           = 3.20f;
+        eepromConfig.batteryMaxLow            = 3.10f;
+
+        eepromConfig.armCount                 =  50;
 		eepromConfig.disarmCount              =  0;
 
 		eepromConfig.activeTelemetry          =  0;

@@ -304,6 +304,7 @@ void systemInit(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17,  ENABLE);  // Spektrum Frame Sync
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);  // Telemetry
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);  // GPS
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);  // Spektrum RX
 
     ///////////////////////////////////////////////////////////////////////////
@@ -322,6 +323,7 @@ void systemInit(void)
 
 	cliInit();
 	gpioInit();
+	gpsInit();
     telemetryInit();
     adcInit();
 

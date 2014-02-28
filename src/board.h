@@ -73,6 +73,7 @@
 #include "drv_cli.h"
 #include "drv_crc.h"
 #include "drv_gpio.h"
+#include "drv_gps.h"
 #include "drv_ppmRx.h"
 #include "drv_pwmESC.h"
 #include "drv_pwmServo.h"

@@ -13,6 +13,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+thresholds_t thresholds[3];
+
 uint8_t batConnectedFirstPass = false;
 
 uint8_t batMonLowWarning          = 0;
@@ -21,28 +23,17 @@ uint8_t batMonLowWarningTriggered = false;
 uint8_t batMonVeryLowWarning          = 0;
 uint8_t batMonVeryLowWarningTriggered = false;
 
+uint8_t batMonMaxLowWarningTriggered = false;
+
+uint8_t lastArmed = false;
+
 uint8_t batteryNumCells = 3;
 
 float   batteryVoltage;
 
-typedef void (*batMonCB_t)(void);
-
-typedef struct thresholds_t
-{
-    float value;
-    batMonCB_t func;
-} thresholds_t ;
-
 void batMonLow(void);
 void batMonVeryLow(void);
 void batMonMaxLow(void);
-
-static const thresholds_t thresholds[] =
-{
-    { 3.6, batMonLow     },
-    { 3.5, batMonVeryLow },
-    { 3.4, batMonMaxLow  },
-};
 
 enum
 {
@@ -66,6 +57,14 @@ void measureBattery(void)
 
 void batteryInit(void)
 {
+    thresholds[BATTERY_LOW].value      = eepromConfig.batteryLow;
+    thresholds[BATTERY_VERY_LOW].value = eepromConfig.batteryVeryLow;
+    thresholds[BATTRY_MAX_LOW].value   = eepromConfig.batteryMaxLow;
+
+    thresholds[BATTERY_LOW].func      = batMonLow;
+    thresholds[BATTERY_VERY_LOW].func = batMonVeryLow;
+    thresholds[BATTRY_MAX_LOW].func   = batMonMaxLow;
+
     measureBattery();
 
     if (eepromConfig.batteryCells == 0)
@@ -106,6 +105,30 @@ void batMonTick(void)
         else if ( thresholdCount[i] > 0 )
             --thresholdCount[i];
     }
+
+    if ((armed == false) && (lastArmed == true))
+    {
+		if (batMonLowWarningTriggered == true)
+		{
+			batMonLowWarningTriggered = false;
+			batMonLowWarning          = 0;
+		}
+
+		if (batMonVeryLowWarningTriggered == true)
+		{
+			batMonVeryLowWarningTriggered = false;
+			batMonVeryLowWarning          = 0;
+		}
+
+		if (batMonMaxLowWarningTriggered == true)
+		{
+			batMonMaxLowWarningTriggered = false;
+		}
+
+		BEEP_OFF;
+	}
+
+	lastArmed = armed;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -132,7 +155,7 @@ void batMonVeryLow(void)
     // lights, etc.
     // User needs to descend now ...
 
-    if (batMonVeryLowWarning == false)
+    if (batMonVeryLowWarningTriggered == false)
     {
     	evrPush(EVR_BatVeryLow, (int)(v_bat_ave * 1000.0f));
 
@@ -146,12 +169,16 @@ void batMonVeryLow(void)
 void batMonMaxLow(void)
 {
     // User isn't listening flyer needs to auto-descend now ....
-
-    evrPush(EVR_BatMaxLow, (int)(v_bat_ave * 1000.0f));
-
     // Maybe do something more interesting like auto-descent or hover-hold.
 
-    BEEP_ON;
+    if (batMonMaxLowWarningTriggered == false)
+    {
+		evrPush(EVR_BatMaxLow, (int)(v_bat_ave * 1000.0f));
+
+		BEEP_ON;
+
+		batMonMaxLowWarningTriggered = true;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////

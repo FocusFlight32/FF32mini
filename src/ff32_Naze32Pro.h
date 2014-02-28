@@ -280,6 +280,10 @@ typedef struct eepromConfig_t
     float   voltageMonitorScale;
     float   voltageMonitorBias;
 
+    float   batteryLow;
+    float   batteryVeryLow;
+    float   batteryMaxLow;
+
     ///////////////////////////////////
 
     uint8_t armCount;
