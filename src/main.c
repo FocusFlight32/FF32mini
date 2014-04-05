@@ -47,6 +47,10 @@ sensors_t      sensors;
 
 heading_t      heading;
 
+gps_t          gps;
+
+homeData_t     homeData;
+
 uint16_t       timerValue;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -118,6 +122,8 @@ int main(void)
 			    magDataUpdate = true;
             }
 
+        	decodeUbloxMsg();
+
         	batMonTick();
 
             cliCom();
@@ -154,9 +160,9 @@ int main(void)
 
        	    computeMPU6000TCBias();
 
-       	    sensors.accel500Hz[XAXIS] = -((float)accelSummedSamples500Hz[XAXIS] / 2.0f - accelTCBias[XAXIS]) * ACCEL_SCALE_FACTOR;
-            sensors.accel500Hz[YAXIS] =  ((float)accelSummedSamples500Hz[YAXIS] / 2.0f - accelTCBias[YAXIS]) * ACCEL_SCALE_FACTOR;
-            sensors.accel500Hz[ZAXIS] = -((float)accelSummedSamples500Hz[ZAXIS] / 2.0f - accelTCBias[ZAXIS]) * ACCEL_SCALE_FACTOR;
+       	    sensors.accel500Hz[XAXIS] = -((float)accelSummedSamples500Hz[XAXIS] * 0.5f - eepromConfig.accelBiasMPU[XAXIS] - accelTCBias[XAXIS]) * eepromConfig.accelScaleFactorMPU[XAXIS];
+            sensors.accel500Hz[YAXIS] =  ((float)accelSummedSamples500Hz[YAXIS] * 0.5f - eepromConfig.accelBiasMPU[YAXIS] - accelTCBias[YAXIS]) * eepromConfig.accelScaleFactorMPU[YAXIS];
+            sensors.accel500Hz[ZAXIS] = -((float)accelSummedSamples500Hz[ZAXIS] * 0.5f - eepromConfig.accelBiasMPU[ZAXIS] - accelTCBias[ZAXIS]) * eepromConfig.accelScaleFactorMPU[ZAXIS];
 
             //sensors.accel500Hz[XAXIS] = firstOrderFilter(sensors.accel500Hz[XAXIS], &firstOrderFilters[ACCEL500HZ_X_LOWPASS]);
             //sensors.accel500Hz[YAXIS] = firstOrderFilter(sensors.accel500Hz[YAXIS], &firstOrderFilters[ACCEL500HZ_Y_LOWPASS]);
@@ -200,9 +206,9 @@ int main(void)
 
 			dt100Hz = (float)timerValue * 0.0000005f;  // For integrations in 100 Hz loop
 
-            sensors.accel100Hz[XAXIS] = -((float)accelSummedSamples100Hz[XAXIS] / 10.0f - accelTCBias[XAXIS]) * ACCEL_SCALE_FACTOR;
-            sensors.accel100Hz[YAXIS] =  ((float)accelSummedSamples100Hz[YAXIS] / 10.0f - accelTCBias[YAXIS]) * ACCEL_SCALE_FACTOR;
-            sensors.accel100Hz[ZAXIS] = -((float)accelSummedSamples100Hz[ZAXIS] / 10.0f - accelTCBias[ZAXIS]) * ACCEL_SCALE_FACTOR;
+            sensors.accel100Hz[XAXIS] = -((float)accelSummedSamples100Hz[XAXIS] * 0.1f - eepromConfig.accelBiasMPU[XAXIS] - accelTCBias[XAXIS]) * eepromConfig.accelScaleFactorMPU[XAXIS];
+            sensors.accel100Hz[YAXIS] =  ((float)accelSummedSamples100Hz[YAXIS] * 0.1f - eepromConfig.accelBiasMPU[YAXIS] - accelTCBias[YAXIS]) * eepromConfig.accelScaleFactorMPU[YAXIS];
+            sensors.accel100Hz[ZAXIS] = -((float)accelSummedSamples100Hz[ZAXIS] * 0.1f - eepromConfig.accelBiasMPU[ZAXIS] - accelTCBias[ZAXIS]) * eepromConfig.accelScaleFactorMPU[ZAXIS];
 
 			//sensors.accel100Hz[XAXIS] = firstOrderFilter(sensors.accel100Hz[XAXIS], &firstOrderFilters[ACCEL100HZ_X_LOWPASS]);
 			//sensors.accel100Hz[YAXIS] = firstOrderFilter(sensors.accel100Hz[YAXIS], &firstOrderFilters[ACCEL100HZ_Y_LOWPASS]);
@@ -275,14 +281,21 @@ int main(void)
 			deltaTime5Hz    = currentTime - previous5HzTime;
 			previous5HzTime = currentTime;
 
-			if (execUp == true)
-			    LED0_TOGGLE;
+			gpsUpdated();
+
+            if (eepromConfig.mavlinkEnabled == true)
+            {
+				mavlinkSendGpsRaw();
+			}
 
 			if (batMonVeryLowWarning > 0)
 			{
 				BEEP_TOGGLE;
 				batMonVeryLowWarning--;
 			}
+
+			if (execUp == true)
+			    LED0_TOGGLE;
 
 			executionTime5Hz = micros() - currentTime;
         }
@@ -303,7 +316,10 @@ int main(void)
 			if ((execUpCount == 5) && (execUp == false))
 			{
 			    execUp = true;
+
 			    pwmEscInit();
+
+			    homeData.magHeading = sensors.attitude500Hz[YAW];
 			}
 
 			if (batMonLowWarning > 0)
@@ -315,7 +331,7 @@ int main(void)
             if (eepromConfig.mavlinkEnabled == true)
             {
 				mavlinkSendHeartbeat();
-				mavlinkSendBattery();
+				mavlinkSendSysStatus();
 			}
 
 			executionTime1Hz = micros() - currentTime;

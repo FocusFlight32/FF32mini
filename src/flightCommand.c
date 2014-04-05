@@ -84,6 +84,8 @@ void processFlightCommands(void)
 {
     uint8_t channel;
 
+    float hdgDelta, simpleX, simpleY;
+
     if (rcActive == true)
     {
 		// Read receiver commands
@@ -236,9 +238,28 @@ void processFlightCommands(void)
 
 	///////////////////////////////////
 
+	// Simple Mode Command Processing
+
+	if (rxCommand[AUX3] > MIDCOMMAND)
+	{
+        hdgDelta = sensors.attitude500Hz[YAW] - homeData.magHeading;
+
+        hdgDelta = standardRadianFormat(hdgDelta);
+
+        simpleX = cosf(hdgDelta) * rxCommand[PITCH] + sinf(hdgDelta) * rxCommand[ROLL ];
+
+        simpleY = cosf(hdgDelta) * rxCommand[ROLL ] - sinf(hdgDelta) * rxCommand[PITCH];
+
+        rxCommand[ROLL ] = simpleY;
+
+        rxCommand[PITCH] = simpleX;
+	}
+
+	///////////////////////////////////
+
 	// Vertical Mode Command Processing
 
-	verticalReferenceCommand = rxCommand[THROTTLE] - eepromConfig.midCommand;
+	verticalReferenceCommand = rxCommand[THROTTLE] - MIDCOMMAND;
 
     // Set past altitude reference in detent value
     previousVertRefCmdInDetent = vertRefCmdInDetent;

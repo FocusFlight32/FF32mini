@@ -67,21 +67,27 @@ void sensorCLI()
             ///////////////////////////
 
             case 'a': // Sensor Data
-            	cliPrintF("Accel Temp Comp Slope:     %9.4f, %9.4f, %9.4f\n",   eepromConfig.accelTCBiasSlope[XAXIS],
-            	                                   		                        eepromConfig.accelTCBiasSlope[YAXIS],
-            	                                   		                        eepromConfig.accelTCBiasSlope[ZAXIS]);
-            	cliPrintF("Accel Temp Comp Bias:      %9.4f, %9.4f, %9.4f\n",   eepromConfig.accelTCBiasIntercept[XAXIS],
-            	                                   		                        eepromConfig.accelTCBiasIntercept[YAXIS],
-            	                                                		        eepromConfig.accelTCBiasIntercept[ZAXIS]);
-            	cliPrintF("Gyro Temp Comp Slope:      %9.4f, %9.4f, %9.4f\n",   eepromConfig.gyroTCBiasSlope[ROLL ],
-            	                                                                eepromConfig.gyroTCBiasSlope[PITCH],
-            	                                                                eepromConfig.gyroTCBiasSlope[YAW  ]);
-            	cliPrintF("Gyro Temp Comp Intercept:  %9.4f, %9.4f, %9.4f\n",   eepromConfig.gyroTCBiasIntercept[ROLL ],
-            	                                                                eepromConfig.gyroTCBiasIntercept[PITCH],
-            	                                                                eepromConfig.gyroTCBiasIntercept[YAW  ]);
-            	cliPrintF("Mag Bias:                  %9.4f, %9.4f, %9.4f\n",   eepromConfig.magBias[XAXIS],
-                                                		                        eepromConfig.magBias[YAXIS],
-                                                		                        eepromConfig.magBias[ZAXIS]);
+               	cliPrintF("MPU Accel Bias:            %9.3f, %9.3f, %9.3f\n", eepromConfig.accelBiasMPU[XAXIS],
+			                                                		          eepromConfig.accelBiasMPU[YAXIS],
+			                                                		          eepromConfig.accelBiasMPU[ZAXIS]);
+			    cliPrintF("MPU Accel Scale Factor:    %9.7f, %9.7f, %9.7f\n", eepromConfig.accelScaleFactorMPU[XAXIS],
+							                                                  eepromConfig.accelScaleFactorMPU[YAXIS],
+			                                                		          eepromConfig.accelScaleFactorMPU[ZAXIS]);
+            	cliPrintF("Accel Temp Comp Slope:     %9.4f, %9.4f, %9.4f\n", eepromConfig.accelTCBiasSlope[XAXIS],
+            	                                   		                      eepromConfig.accelTCBiasSlope[YAXIS],
+            	                                   		                      eepromConfig.accelTCBiasSlope[ZAXIS]);
+            	cliPrintF("Accel Temp Comp Bias:      %9.4f, %9.4f, %9.4f\n", eepromConfig.accelTCBiasIntercept[XAXIS],
+            	                                   		                      eepromConfig.accelTCBiasIntercept[YAXIS],
+            	                                                		      eepromConfig.accelTCBiasIntercept[ZAXIS]);
+            	cliPrintF("Gyro Temp Comp Slope:      %9.4f, %9.4f, %9.4f\n", eepromConfig.gyroTCBiasSlope[ROLL ],
+            	                                                              eepromConfig.gyroTCBiasSlope[PITCH],
+            	                                                              eepromConfig.gyroTCBiasSlope[YAW  ]);
+            	cliPrintF("Gyro Temp Comp Intercept:  %9.4f, %9.4f, %9.4f\n", eepromConfig.gyroTCBiasIntercept[ROLL ],
+            	                                                              eepromConfig.gyroTCBiasIntercept[PITCH],
+            	                                                              eepromConfig.gyroTCBiasIntercept[YAW  ]);
+            	cliPrintF("Mag Bias:                  %9.4f, %9.4f, %9.4f\n", eepromConfig.magBias[XAXIS],
+                                                		                      eepromConfig.magBias[YAXIS],
+                                                		                      eepromConfig.magBias[ZAXIS]);
                 cliPrintF("Accel One G:               %9.4f\n",   accelOneG);
                 cliPrintF("Accel Cutoff:              %9.4f\n",   eepromConfig.accelCutoff);
                 cliPrintF("KpAcc (MARG):              %9.4f\n",   eepromConfig.KpAcc);
@@ -107,12 +113,6 @@ void sensorCLI()
                         cliPrint("42 Hz\n");
                         break;
                 }
-
-                cliPrint("Magnetic Variation:           ");
-                if (eepromConfig.magVar >= 0.0f)
-                    cliPrintF("E%6.4f\n\n",  eepromConfig.magVar * R2D);
-                else
-                    cliPrintF("W%6.4f\n\n", -eepromConfig.magVar * R2D);
 
                 if (eepromConfig.verticalVelocityHoldOnly)
                 	cliPrint("Vertical Velocity Hold Only\n\n");
@@ -143,6 +143,15 @@ void sensorCLI()
 
             case 'c': // Magnetometer Calibration
                 magCalibration();
+
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'd': // Accel Bias and Scale Factor Calibration
+                accelCalibrationMPU();
 
                 sensorQuery = 'a';
                 validQuery = true;
@@ -286,7 +295,7 @@ void sensorCLI()
 			   	cliPrint("'a' Display Sensor Data                    'A' Set MPU6000 DLPF                     A0 thru 3\n");
 			   	cliPrint("'b' MPU6000 Calibration                    'B' Set Accel Cutoff                     BAccelCutoff\n");
 			   	cliPrint("'c' Magnetometer Calibration               'C' Set kpAcc/kiAcc                      CKpAcc;KiAcc\n");
-			   	cliPrint("                                           'D' Set kpMag/kiMag                      DKpMag;KiMag\n");
+			   	cliPrint("'d' Accel Bias and SF Calibration          'D' Set kpMag/kiMag                      DKpMag;KiMag\n");
 			   	cliPrint("                                           'E' Set h dot est/h est Comp Filter A/B  EA;B\n");
 			   	cliPrint("                                           'M' Set Voltage Monitor Trip Points      Mlow;veryLow;maxLow\n");
 			   	cliPrint("'v' Toggle Vertical Velocity Hold Only     'V' Set Voltage Monitor Parameters       Vscale;bias;cells\n");

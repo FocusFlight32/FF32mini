@@ -147,7 +147,7 @@ void gpsInit(void)
 
     NVIC_Init(&NVIC_InitStructure);
 
-    USART_InitStructure.USART_BaudRate            = eepromConfig.gpsBaudRate;
+    USART_InitStructure.USART_BaudRate            = 9600;
     USART_InitStructure.USART_WordLength          = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits            = USART_StopBits_1;
     USART_InitStructure.USART_Parity              = USART_Parity_No;
@@ -216,6 +216,31 @@ uint16_t gpsAvailable(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// GPS Clear Buffer
+///////////////////////////////////////////////////////////////////////////////
+
+void gpsClearBuffer(void)
+{
+    rx2DMAPos = DMA_GetCurrDataCounter(DMA1_Channel6);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GPS Number of Characters Available
+///////////////////////////////////////////////////////////////////////////////
+
+uint16_t gpsNumCharsAvailable(void)
+{
+	int32_t number;
+
+	number = rx2DMAPos - DMA_GetCurrDataCounter(DMA1_Channel6);
+
+	if (number >= 0)
+	    return (uint16_t)number;
+	else
+	    return (uint16_t)(UART2_BUFFER_SIZE + number);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // GPS Read
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -266,6 +291,23 @@ void gpsPrint(char *str)
     }
 
     uart2TxDMA();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GPS Print Binary String
+///////////////////////////////////////////////////////////////////////////////
+
+void gpsPrintBinary(uint8_t *buf, uint16_t length)
+{
+    uint16_t i;
+
+   for (i = 0; i < length; i++)
+    {
+    	tx2Buffer[tx2BufferHead] = buf[i];
+    	tx2BufferHead = (tx2BufferHead + 1) % UART2_BUFFER_SIZE;
+    }
+
+	uart2TxDMA();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

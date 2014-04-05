@@ -44,6 +44,8 @@ uint8_t cliBusy = false;
 static volatile uint8_t cliQuery        = 'x';
 static volatile uint8_t validCliCommand = false;
 
+uint8_t gpsDataType = 0;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Read Character String from CLI
 ///////////////////////////////////////////////////////////////////////////////
@@ -312,11 +314,12 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'k': // Vertical Axis Variables
-        	cliPrintF("%9.4f, %9.4f, %9.4f, %9.4f, %4ld\n", earthAxisAccels[ZAXIS],
-        			                                        sensors.pressureAlt50Hz,
-        					                                hDotEstimate,
-        					                                hEstimate,
-        					                                ms5611Temperature);
+        	cliPrintF("%9.4f, %9.4f, %9.4f, %9.4f, %4ld, %9.4f\n", earthAxisAccels[ZAXIS],
+        			                                               sensors.pressureAlt50Hz,
+        					                                       hDotEstimate,
+        					                                       hEstimate,
+        					                                       ms5611Temperature,
+        					                                       aglRead());
         	validCliCommand = false;
         	break;
 
@@ -337,6 +340,66 @@ void cliCom(void)
            			                           axisPID[YAW  ]);
            	validCliCommand = false;
            	break;
+
+        ///////////////////////////////
+
+        case 'n': // GPS Data
+           	switch (gpsDataType)
+           	{
+           	    ///////////////////////
+
+           	    case 0:
+           	        cliPrintF("%12ld, %12ld, %12ld, %12ld, %12ld, %12ld, %4d, %4d\n", gps.latitude,
+           			                                                                  gps.longitude,
+           			                                                                  gps.hMSL,
+           			                                                                  gps.velN,
+           			                                                                  gps.velE,
+           			                                                                  gps.velD,
+           			                                                                  gps.fix,
+           			                                                                  gps.numSats);
+           	        break;
+
+           	    ///////////////////////
+
+           	    case 1:
+           	    	cliPrintF("%3d: ", gps.numCh);
+
+           	    	for (index = 0; index < gps.numCh; index++)
+           	    	    cliPrintF("%3d  ", gps.chn[index]);
+
+           	    	cliPrint("\n");
+
+           	    	break;
+
+           	    ///////////////////////
+
+           	    case 2:
+           	    	cliPrintF("%3d: ", gps.numCh);
+
+           	    	for (index = 0; index < gps.numCh; index++)
+           	    		cliPrintF("%3d  ", gps.svid[index]);
+
+           	    	cliPrint("\n");
+
+           	    	break;
+
+           	    ///////////////////////
+
+           	    case 3:
+           	    	cliPrintF("%3d: ", gps.numCh);
+
+           	    	for (index = 0; index < gps.numCh; index++)
+           	    		cliPrintF("%3d  ", gps.cno[index]);
+
+           	    	cliPrint("\n");
+
+           	    	break;
+
+           	    ///////////////////////
+           	}
+
+           	validCliCommand = false;
+            break;
 
        ///////////////////////////////
 
@@ -662,6 +725,17 @@ void cliCom(void)
 
         ///////////////////////////////
 
+        case 'Q': // GPS Data Selection
+        	gpsDataType = (uint8_t)readFloatCLI();
+
+        	cliPrint("\n");
+
+            cliQuery = 'n';
+            validCliCommand = false;
+            break;
+
+        ///////////////////////////////
+
         case 'R': // Reset to Bootloader
         	cliPrint("Entering Bootloader....\n\n");
         	delay(100);
@@ -724,6 +798,8 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'Y': // Not Used
+            computeGeoMagElements();
+
             cliQuery = 'x';
             break;
 
@@ -765,10 +841,10 @@ void cliCom(void)
 
    		    cliPrint("\n");
    		    cliPrint("'m' Axis PIDs                              'M' Not Used\n");
-   		    cliPrint("'n' Not Used                               'N' Mixer CLI\n");
+   		    cliPrint("'n' GPS Data                               'N' Mixer CLI\n");
    		    cliPrint("'o' Battery Voltage                        'O' Receiver CLI\n");
-   		    cliPrint("'p' Not Used                               'P' Sensor CLI\n");
-   		    cliPrint("'q' Primary Spektrum Raw Data              'Q' Not Used\n");
+   		    cliPrint("'p' Primary Spektrum Raw Data              'P' Sensor CLI\n");
+   		    cliPrint("'q' Not Used                               'Q' GPS Data Selection\n");
    		    cliPrint("'r' Mode States                            'R' Reset and Enter Bootloader\n");
    		    cliPrint("'s' Raw Receiver Commands                  'S' Reset\n");
    		    cliPrint("'t' Processed Receiver Commands            'T' Telemetry CLI\n");

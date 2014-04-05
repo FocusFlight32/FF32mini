@@ -115,6 +115,7 @@ void SysTick_Handler(void)
 
     if ((systemReady        == true)  &&
         (cliBusy            == false) &&
+        (accelCalibrating   == false) &&
         (escCalibrating     == false) &&
         (magCalibrating     == false) &&
         (mpu6000Calibrating == false))
@@ -285,7 +286,7 @@ void systemInit(void)
     // Turn on peripherial clocks
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12,    ENABLE);
 
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,     ENABLE);  // USART1
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,     ENABLE);  // USART1, USART2
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2,     ENABLE);  // ADC2
 
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA,    ENABLE);
@@ -301,6 +302,7 @@ void systemInit(void)
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6,   ENABLE);  // 500 Hz dt Counter
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7,   ENABLE);  // 100 Hz dt Counter
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM15,  ENABLE);  // PWM ESC Out 3 & 4
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM16,  ENABLE);  // RangeFinder PWM
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17,  ENABLE);  // Spektrum Frame Sync
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);  // Telemetry
@@ -325,7 +327,6 @@ void systemInit(void)
 	gpioInit();
 	gpsInit();
     telemetryInit();
-    adcInit();
 
     LED0_OFF;
 
@@ -358,10 +359,12 @@ void systemInit(void)
     else
     	cliPrint("Using Spektrum Satellite Receiver....\n\n");
 
+    initUBLOX();
+
     delay(10000);  // Remaining 10 seconds of 20 second delay for sensor stabilization - probably not long enough..
 
-    LED0_ON;
-
+    adcInit();
+    aglInit();
     batteryInit();
     pwmServoInit();
 
@@ -376,6 +379,8 @@ void systemInit(void)
     initFirstOrderFilter();
     initMavlink();
     initPID();
+
+    LED0_ON;
 
     initMPU6000();
     initMag();

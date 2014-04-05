@@ -43,7 +43,7 @@
 
 const char rcChannelLetters[] = "AERT1234";
 
-static uint8_t checkNewEEPROMConf = 5;
+static uint8_t checkNewEEPROMConf = 7;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -176,6 +176,18 @@ void checkFirstTime(bool eepromReset)
     {
 		// Default settings
         eepromConfig.version = checkNewEEPROMConf;
+
+	    ///////////////////////////////
+
+        eepromConfig.accelBiasMPU[XAXIS] = 0.0f;
+        eepromConfig.accelBiasMPU[YAXIS] = 0.0f;
+        eepromConfig.accelBiasMPU[ZAXIS] = 0.0f;
+
+        ///////////////////////////////
+
+        eepromConfig.accelScaleFactorMPU[XAXIS] = 0.00119708f;  // (1/8192) * 9.8065  (8192 LSB = 1 G)
+        eepromConfig.accelScaleFactorMPU[YAXIS] = 0.00119708f;  // (1/8192) * 9.8065  (8192 LSB = 1 G)
+        eepromConfig.accelScaleFactorMPU[ZAXIS] = 0.00119708f;  // (1/8192) * 9.8065  (8192 LSB = 1 G)
 
 	    ///////////////////////////////
 
@@ -436,9 +448,7 @@ void checkFirstTime(bool eepromReset)
         eepromConfig.PID[H_PID].dErrorCalc              =   D_ERROR;
         eepromConfig.PID[H_PID].type                    =   OTHER;
 
-        eepromConfig.magVar                 =  9.033333f * D2R;  // Albuquerque, NM Mag Var 9 degrees 2 minutes (+ East, - West)
-
-		eepromConfig.batteryCells             = 3;
+        eepromConfig.batteryCells             = 3;
 		eepromConfig.voltageMonitorScale      = 11.0f / 1.0f;
 		eepromConfig.voltageMonitorBias       = 0.0f;
 
@@ -453,8 +463,6 @@ void checkFirstTime(bool eepromReset)
 		eepromConfig.mavlinkEnabled           =  false;
 
 		eepromConfig.verticalVelocityHoldOnly = true;
-
-		eepromConfig.gpsBaudRate              = 38400;
 
 		eepromConfig.CRCFlags = 0;
 

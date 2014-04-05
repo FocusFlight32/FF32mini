@@ -70,6 +70,7 @@
 #include "ff32_Naze32Pro.h"
 
 #include "drv_adc.h"
+#include "drv_agl.h"
 #include "drv_cli.h"
 #include "drv_crc.h"
 #include "drv_gpio.h"
@@ -87,6 +88,7 @@
 #include "mpu6000.h"
 #include "ms5611_SPI.h"
 
+#include "accelCalibrationMPU.h"
 #include "batMon.h"
 #include "cli.h"
 #include "computeAxisCommands.h"
@@ -97,6 +99,9 @@
 #include "evr.h"
 #include "firstOrderFilter.h"
 #include "flightCommand.h"
+#include "geoMagElements.h"
+#include "GeomagnetismHeader.h"
+#include "gps.h"
 #include "MargAHRS.h"
 #include "magCalibration.h"
 #include "mavlinkStrings.h"
