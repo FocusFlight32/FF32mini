@@ -56,19 +56,19 @@ void magCalibration()
 
 	magCalibrating = true;
 
-	cliPrint("\n\nMagnetometer Calibration:\n\n");
+	cliPortPrint("\n\nMagnetometer Calibration:\n\r\n");
 
-    cliPrint("Rotate magnetometer around all axes multiple times\n");
-    cliPrint("Must complete within 60 seconds....\n\n");
-    cliPrint("  Send a character when ready to begin and another when complete\n\n");
+    cliPortPrint("Rotate magnetometer around all axes multiple times\r\n");
+    cliPortPrint("Must complete within 60 seconds....\n\r\n");
+    cliPortPrint("  Send a character when ready to begin and another when complete\n\r\n");
 
-    while (cliAvailable() == false);
+    while (cliPortAvailable() == false);
 
-    cliPrint("  Start rotations.....\n\n");
+    cliPortPrint("  Start rotations.....\n\r\n");
 
-    cliRead();
+    cliPortRead();
 
-    while ((cliAvailable() == false) && (calibrationCounter < 600))
+    while ((cliPortAvailable() == false) && (calibrationCounter < 600))
 	{
 		if (readMag() == true)
 		{
@@ -82,13 +82,13 @@ void magCalibration()
 		delay(100);
 	}
 
-    cliPrintF("\n\nMagnetometer Bias Calculation, %3ld samples collected out of 600 max)\n", calibrationCounter);
+    cliPortPrintF("\n\nMagnetometer Bias Calculation, %3ld samples collected out of 600 max)\r\n", calibrationCounter);
 
 	sphereFit(d, calibrationCounter, 100, 0.0f, population, sphereOrigin, &sphereRadius);
 
-	eepromConfig.magBias[XAXIS] = sphereOrigin[XAXIS];
-	eepromConfig.magBias[YAXIS] = sphereOrigin[YAXIS];
-	eepromConfig.magBias[ZAXIS] = sphereOrigin[ZAXIS];
+	sensorConfig.magBias[XAXIS] = sphereOrigin[XAXIS];
+	sensorConfig.magBias[YAXIS] = sphereOrigin[YAXIS];
+	sensorConfig.magBias[ZAXIS] = sphereOrigin[ZAXIS];
 
     magCalibrating = false;
 }

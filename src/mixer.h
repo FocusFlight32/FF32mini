@@ -43,9 +43,9 @@ extern uint8_t numberMotor;
 
 extern float throttleCmd;
 
-extern float motor[8];
+extern float motor[6];
 
-extern float servo[2];
+extern float servo[4];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Initialize Mixer

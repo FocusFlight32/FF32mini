@@ -45,44 +45,86 @@ void mixerCLI()
 {
     float    tempFloat;
 
+    uint8_t  index;
+    uint8_t  rows, columns;
+
     uint8_t  mixerQuery = 'x';
     uint8_t  validQuery = false;
 
     cliBusy = true;
 
-    cliPrint("\nEntering Mixer CLI....\n\n");
+    cliPortPrint("\nEntering Mixer CLI....\n\r\n");
 
     while(true)
     {
-        cliPrint("Mixer CLI -> ");
+        cliPortPrint("Mixer CLI -> ");
 
-		while ((cliAvailable() == false) && (validQuery == false));
+		while ((cliPortAvailable() == false) && (validQuery == false));
 
 		if (validQuery == false)
-		    mixerQuery = cliRead();
+		    mixerQuery = cliPortRead();
 
-		cliPrint("\n");
+		cliPortPrint("\r\n");
 
 		switch(mixerQuery)
 		{
             ///////////////////////////
 
             case 'a': // Mixer Configuration
-                cliPrint("\nMixer Configuration:  ");
-                switch (eepromConfig.mixerConfiguration)
+                cliPortPrint("\nMixer Configuration:  ");
+                switch (systemConfig.mixerConfiguration)
                 {
+                    case MIXERTYPE_TRI:
+                        cliPortPrint("   MIXERTYPE TRI\r\n");
+                        break;
+
                     case MIXERTYPE_QUADX:
-                        cliPrint("MIXERTYPE QUAD X\n");
+                        cliPortPrint("MIXERTYPE QUAD X\r\n");
                         break;
 
                     case MIXERTYPE_HEX6X:
-                        cliPrint(" MIXERTYPE HEX X\n");
+                        cliPortPrint(" MIXERTYPE HEX X\r\n");
+                        break;
+
+                    case MIXERTYPE_FREE:
+                        cliPortPrint("  MIXERTYPE FREE\r\n");
                         break;
                 }
 
-                cliPrintF("Number of Motors:                    %1d\n",  numberMotor);
-                cliPrintF("ESC PWM Rate:                      %3ld\n", eepromConfig.escPwmRate);
-                cliPrintF("Servo PWM Rate:                    %3ld\n\n", eepromConfig.servoPwmRate);
+                cliPortPrintF("Number of Motors:                    %1d\r\n",  numberMotor);
+                cliPortPrintF("ESC PWM Rate:                      %3ld\r\n",   systemConfig.escPwmRate);
+                cliPortPrintF("Servo PWM Rate:                    %3ld\n\r\n", systemConfig.servoPwmRate);
+
+                if (systemConfig.yawDirection == 1.0f)
+                	cliPortPrintF("Yaw Direction:                  Normal\n\r\n");
+                else if (systemConfig.yawDirection == -1.0f)
+                	cliPortPrintF("Yaw Direction:                 Reverse\n\r\n");
+                else
+                	cliPortPrintF("Yaw Direction:               Undefined\n\r\n");
+
+                if (systemConfig.mixerConfiguration == MIXERTYPE_TRI)
+                {
+					cliPortPrintF("TriCopter Yaw Servo PWM Rate:      %3ld\r\n",   systemConfig.triYawServoPwmRate);
+                    cliPortPrintF("TriCopter Yaw Servo Min PWM:      %4ld\r\n",    (uint16_t)systemConfig.triYawServoMin);
+                    cliPortPrintF("TriCopter Yaw Servo Mid PWM:      %4ld\r\n",    (uint16_t)systemConfig.triYawServoMid);
+                    cliPortPrintF("TriCopter Yaw Servo Max PWM:      %4ld\r\n",    (uint16_t)systemConfig.triYawServoMax);
+                    cliPortPrintF("Tricopter Yaw Cmd Time Constant:  %5.3f\n\r\n", systemConfig.triCopterYawCmd500HzLowPassTau);
+			    }
+
+        	    if (systemConfig.mixerConfiguration == MIXERTYPE_FREE)
+                {
+					cliPortPrintF("\nNumber of Free Mixer Motors:  %1d\n         Roll    Pitch   Yaw\n\r\n", systemConfig.freeMixMotors);
+
+        	        for ( index = 0; index < systemConfig.freeMixMotors; index++ )
+        	        {
+        	    	    cliPortPrintF("Motor%1d  %6.3f  %6.3f  %6.3f\r\n", index,
+        	    			                                             systemConfig.freeMix[index][ROLL ],
+        	    			                                             systemConfig.freeMix[index][PITCH],
+        	    			                                             systemConfig.freeMix[index][YAW  ]);
+        	        }
+
+        	        cliPortPrint("\r\n");
+			    }
 
                 validQuery = false;
                 break;
@@ -90,7 +132,7 @@ void mixerCLI()
             ///////////////////////////
 
 			case 'x':
-			    cliPrint("\nExiting Mixer CLI....\n\n");
+			    cliPortPrint("\nExiting Mixer CLI....\n\r\n");
 			    cliBusy = false;
 			    return;
 			    break;
@@ -98,8 +140,10 @@ void mixerCLI()
             ///////////////////////////
 
             case 'A': // Read Mixer Configuration
-                eepromConfig.mixerConfiguration = (uint8_t)readFloatCLI();
+                systemConfig.mixerConfiguration = (uint8_t)readFloatCLI();
+
                 initMixer();
+                pwmEscInit();
 
         	    mixerQuery = 'a';
                 validQuery = true;
@@ -108,11 +152,11 @@ void mixerCLI()
             ///////////////////////////
 
             case 'B': // Read ESC and Servo PWM Update Rates
-                eepromConfig.escPwmRate   = (uint16_t)readFloatCLI();
-                eepromConfig.servoPwmRate = (uint16_t)readFloatCLI();
+                systemConfig.escPwmRate   = (uint16_t)readFloatCLI();
+                systemConfig.servoPwmRate = (uint16_t)readFloatCLI();
 
-                pwmEscInit(eepromConfig.escPwmRate);
-                pwmServoInit(eepromConfig.servoPwmRate);
+                pwmEscInit();
+                pwmServoInit();
 
                 mixerQuery = 'a';
                 validQuery = true;
@@ -120,14 +164,14 @@ void mixerCLI()
 
             ///////////////////////////
 
-            case 'M': // Read yaw direction
+            case 'D': // Read yaw direction
                 tempFloat = readFloatCLI();
                 if (tempFloat >= 0.0)
                     tempFloat = 1.0;
                 else
                 	tempFloat = -1.0;
 
-                eepromConfig.yawDirection = tempFloat;
+                systemConfig.yawDirection = tempFloat;
 
                 mixerQuery = 'a';
                 validQuery = true;
@@ -135,21 +179,181 @@ void mixerCLI()
 
             ///////////////////////////
 
-            case 'W': // Write EEPROM Parameters
-                cliPrint("\nWriting EEPROM Parameters....\n\n");
-                writeEEPROM();
+            case 'E': // Read TriCopter Servo PWM Rate
+            	if (systemConfig.mixerConfiguration == MIXERTYPE_TRI)
+               	{
+               		systemConfig.triYawServoPwmRate = (uint16_t)readFloatCLI();
+
+                    pwmEscInit();
+               	}
+                else
+                {
+                   	tempFloat = readFloatCLI();
+
+                   	cliPortPrintF("\nTriCopter Mixing not Selected....\n\r\n");
+                }
+
+                mixerQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'F': // Read TriCopter Servo Min Point
+               	if (systemConfig.mixerConfiguration == MIXERTYPE_TRI)
+               	{
+               		systemConfig.triYawServoMin = readFloatCLI();
+
+               		pwmEscWrite(5, (uint16_t)systemConfig.triYawServoMin);
+                }
+                else
+                {
+                   	tempFloat = readFloatCLI();
+
+                    cliPortPrintF("\nTriCopter Mixing not Selected....\n\r\n");
+                }
+
+                mixerQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'G': // Read TriCopter Servo Mid Point
+                if (systemConfig.mixerConfiguration == MIXERTYPE_TRI)
+                {
+                    systemConfig.triYawServoMid = readFloatCLI();
+
+                    pwmEscWrite(5, (uint16_t)systemConfig.triYawServoMid);
+                }
+                else
+                {
+                   	tempFloat = readFloatCLI();
+
+                   	cliPortPrintF("\nTriCopter Mixing not Selected....\n\r\n");
+                }
+
+                mixerQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'H': // Read TriCopter Servo Max Point
+                if (systemConfig.mixerConfiguration == MIXERTYPE_TRI)
+                {
+                    systemConfig.triYawServoMax = readFloatCLI();
+
+                    pwmEscWrite(5, (uint16_t)systemConfig.triYawServoMax);
+                }
+                else
+                {
+                    tempFloat = readFloatCLI();
+
+                    cliPortPrintF("\nTriCopter Mixing not Selected....\n\r\n");
+                }
+
+                mixerQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'I': // Read TriCopter Yaw Command Time Constant
+                if (systemConfig.mixerConfiguration == MIXERTYPE_TRI)
+                {
+                	systemConfig.triCopterYawCmd500HzLowPassTau = readFloatCLI();
+
+                	initFirstOrderFilter();
+                }
+                else
+                {
+                    tempFloat = readFloatCLI();
+
+                    cliPortPrintF("\nTriCopter Mixing not Selected....\n\r\n");
+                }
+
+                mixerQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'J': // Read Free Mix Motor Number
+           	    if (systemConfig.mixerConfiguration == MIXERTYPE_FREE)
+                {
+                	systemConfig.freeMixMotors = (uint8_t)readFloatCLI();
+           	        initMixer();
+				}
+				else
+				{
+					tempFloat = readFloatCLI();
+
+					cliPortPrintF("\nFree Mix not Selected....\n\r\n");
+                }
+
+           	    mixerQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'K': // Read Free Mix Matrix Element
+                if (systemConfig.mixerConfiguration == MIXERTYPE_FREE)
+                {
+                	rows    = (uint8_t)readFloatCLI() - 1;
+                    columns = (uint8_t)readFloatCLI() - 1;
+
+                    systemConfig.freeMix[rows][columns] = readFloatCLI();
+				}
+				else
+				{
+					tempFloat = readFloatCLI();
+					tempFloat = readFloatCLI();
+					tempFloat = readFloatCLI();
+
+					cliPortPrintF("\nFree Mix not Selected....\n\r\n");
+                }
+
+           	    mixerQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'W': // Write System EEPROM Parameters
+                cliPortPrint("\nWriting System EEPROM Parameters....\n\r\n");
+                writeSystemEEPROM();
+
+                validQuery = false;
                 break;
 
 			///////////////////////////
 
 			case '?':
-			   	cliPrint("\n");
-			   	cliPrint("'a' Mixer Configuration Data               'A' Set Mixer Configuration              A1, A2\n");
-   		        cliPrint("                                           'B' Set PWM Rates                        BESC;Servo\n");
-			   	cliPrint("                                           'M' Set Yaw Direction                    M1 or M-1\n");
-   		        cliPrint("                                           'W' Write EEPROM Parameters\n");
-   		        cliPrint("'x' Exit Sensor CLI                        '?' Command Summary\n");
-   		        cliPrint("\n");
+			   	cliPortPrint("\r\n");
+			   	cliPortPrint("'a' Mixer Configuration Data               'A' Set Mixer Configuration              A0 thru 3, see ff32_Naze32Pro.h\r\n");
+   		        cliPortPrint("                                           'B' Set PWM Rates                        BESC;Servo\r\n");
+   		        cliPortPrint("                                           'D' Set Yaw Direction                    D1 or D-1\r\n");
+
+   		        if (systemConfig.mixerConfiguration == MIXERTYPE_TRI)
+   		    	{
+   		        	cliPortPrint("                                           'E' Set TriCopter Servo PWM Rate         ERate\r\n");
+   		        	cliPortPrint("                                           'F' Set TriCopter Servo Min Point        FMin\r\n");
+			   	    cliPortPrint("                                           'G' Set TriCopter Servo Mid Point        GMid\r\n");
+			   	    cliPortPrint("                                           'H' Set TriCopter Servo Max Point        HMax\r\n");
+			   	    cliPortPrint("                                           'I' Set TriCopter Yaw Cmd Time Constant  ITimeConstant\r\n");
+   		    	}
+
+   		        if (systemConfig.mixerConfiguration == MIXERTYPE_FREE)
+   		    	{
+   		        	cliPortPrint("                                           'J' Set Number of FreeMix Motors         JNumb\r\n");
+   		        	cliPortPrint("                                           'K' Set FreeMix Matrix Element           KRow;Col;Value\r\n");
+			   	}
+
+   		        cliPortPrint("                                           'W' Write EEPROM Parameters\r\n");
+   		        cliPortPrint("'x' Exit Mixer CLI                         '?' Command Summary\r\n");
+   		        cliPortPrint("\r\n");
 	    	    break;
 
 	    	///////////////////////////

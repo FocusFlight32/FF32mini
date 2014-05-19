@@ -52,8 +52,8 @@
 #define MASTER_BIND_COUNT   5
 #define SLAVE_BIND_COUNT    6
 
-#define SPEKTRUM_BIND_PIN   GPIO_Pin_4
-#define SPEKTRUM_BIND_GPIO  GPIOB
+#define SPEKTRUM_BIND_PIN   GPIO_Pin_8
+#define SPEKTRUM_BIND_GPIO  GPIOA
 
 ///////////////////////////////////////
 
@@ -110,7 +110,7 @@ void decodeChannels(void)
 
     for (i = 0; (i < SPEKTRUM_CHANNELS_PER_FRAME * expectedFrames); i++)
     {
-        if ((eepromConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
+        if ((systemConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
     	   	channelData = (!bestReceiver) ? primarySpektrumState.values[i] : slaveSpektrumState.values[i];
     	else
     	   	channelData = primarySpektrumState.values[i];
@@ -177,7 +177,7 @@ void decodeChannels(void)
 
 void processSpektrumData(void)
 {
-    if ((eepromConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
+    if ((systemConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
     {
     	// If we have two receivers and at least one of them has new data
 
@@ -399,11 +399,6 @@ void slaveSpektrumFrameLost(void)
 
 void USART3_IRQHandler(void)
 {
-    if (((USART3->CR1 & USART_CR1_TXEIE) != 0) && ((USART3->ISR & USART_ISR_TXE) != 0))
-    {
-        USART3->CR1 &= ~USART_CR1_TXEIE;
-    }
-
     if (((USART3->CR1 & USART_CR1_RXNEIE) != 0) && ((USART3->ISR & USART_ISR_RXNE) != 0))
     {
         uint8_t b = USART_ReceiveData(USART3);
@@ -418,11 +413,6 @@ void USART3_IRQHandler(void)
 
 void USART1_IRQHandler(void)
 {
-    if (((USART1->CR1 & USART_CR1_TXEIE) != 0) && ((USART1->ISR & USART_ISR_TXE) != 0))
-	{
-        USART1->CR1 &= ~USART_CR1_TXEIE;
-    }
-
     if (((USART1->CR1 & USART_CR1_RXNEIE) != 0) && ((USART1->ISR & USART_ISR_RXNE) != 0))
     {
         uint8_t b = USART_ReceiveData(USART1);
@@ -442,7 +432,7 @@ void TIM1_TRG_COM_TIM17_IRQHandler(void)
     if (primarySpektrumState.spektrumTimer)
         --primarySpektrumState.spektrumTimer;
 
-    if ((eepromConfig.slaveSpektrum == true)  && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
+    if ((systemConfig.slaveSpektrum == true)  && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
     {
 	    if (slaveSpektrumState.spektrumTimer)
             --slaveSpektrumState.spektrumTimer;
@@ -471,6 +461,7 @@ void spektrumInit(void)
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority        = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd                = ENABLE;
+
     NVIC_Init(&NVIC_InitStructure);
 
     TIM_TimeBaseStructure.TIM_Period            = 100 - 1;             // 100 1 uSec Ticks
@@ -522,7 +513,7 @@ void spektrumInit(void)
 
     ///////////////////////////////////
 
-    if ((eepromConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
+    if ((systemConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
     {
 		NVIC_InitStructure.NVIC_IRQChannel                   = USART1_IRQn;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
@@ -610,7 +601,7 @@ void checkSpektrumBind(void)
 
     ///////////////////////////////////
 
-    if ((eepromConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
+    if ((systemConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
     {
         // Configure Slave UART pin as output
         GPIO_InitStructure.GPIO_Pin   = SLAVE_SPEKTRUM_UART_PIN;
@@ -638,7 +629,7 @@ void checkSpektrumBind(void)
 
     ///////////////////////////////////
 
-    if ((eepromConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
+    if ((systemConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
     {
         for (i = 0; i < SLAVE_BIND_COUNT; i++)
         {

@@ -54,10 +54,10 @@ void initPID(void)
 
     for (index = 0; index < NUMBER_OF_PIDS; index++)
     {
-    	eepromConfig.PID[index].iTerm          = 0.0f;
-    	eepromConfig.PID[index].lastDcalcValue = 0.0f;
-    	eepromConfig.PID[index].lastDterm      = 0.0f;
-    	eepromConfig.PID[index].lastLastDterm  = 0.0f;
+    	systemConfig.PID[index].iTerm          = 0.0f;
+    	systemConfig.PID[index].lastDcalcValue = 0.0f;
+    	systemConfig.PID[index].lastDterm      = 0.0f;
+    	systemConfig.PID[index].lastLastDterm  = 0.0f;
 	}
 }
 
@@ -130,7 +130,7 @@ float updatePID(float command, float state, float deltaT, uint8_t iHold, struct 
 
 void setPIDintegralError(uint8_t IDPid, float value)
 {
-	eepromConfig.PID[IDPid].iTerm = value;
+	systemConfig.PID[IDPid].iTerm = value;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -147,9 +147,9 @@ void zeroPIDintegralError(void)
 
 void setPIDstates(uint8_t IDPid, float value)
 {
-    eepromConfig.PID[IDPid].lastDcalcValue = value;
-    eepromConfig.PID[IDPid].lastDterm      = value;
-    eepromConfig.PID[IDPid].lastLastDterm  = value;
+    systemConfig.PID[IDPid].lastDcalcValue = value;
+    systemConfig.PID[IDPid].lastDterm      = value;
+    systemConfig.PID[IDPid].lastLastDterm  = value;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

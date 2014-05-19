@@ -43,43 +43,50 @@
 
 #define SERVO_PULSE_1p5MS           3000  // 1.5 ms pulse width
 
-static volatile uint32_t *OutputChannels[] = { &(TIM2->CCR1),
-	                                           &(TIM2->CCR2),};
+static volatile uint32_t *OutputChannels[] = { &(TIM4->CCR1),
+	                                           &(TIM4->CCR2),
+	                                           &(TIM4->CCR3),
+	                                           &(TIM4->CCR4),};
 
 ///////////////////////////////////////////////////////////////////////////////
 // PWM Servo Initialization
 ///////////////////////////////////////////////////////////////////////////////
 
-void pwmServoInit(uint16_t servoPwmRate)
+void pwmServoInit(void)
 {
     GPIO_InitTypeDef         GPIO_InitStructure;
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
     TIM_OCInitTypeDef        TIM_OCInitStructure;
 
     // Outputs
-    // Servo PWM1  TIM2_CH1  PA0
-    // Servo PWM2  TIM2_CH2  PA1
+    // Servo PWM1  TIM4_CH1   PB6
+	// Servo PWM2  TIM4_CH2   PB7
+	// Servo PWM3  TIM4_CH3   PB8
+	// Servo PWM4  TIM4_CH4   PB9
 
-    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_0 | GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_6 | GPIO_Pin_7 |
+                                    GPIO_Pin_8 | GPIO_Pin_9;
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_1);
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_1);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_2);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_2);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource8, GPIO_AF_2);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource9, GPIO_AF_2);
 
-    // Output timers
+// Output timers
 
-    TIM_TimeBaseStructure.TIM_Period            = (uint16_t)(2000000 / servoPwmRate) - 1;
+    TIM_TimeBaseStructure.TIM_Period            = (uint16_t)(2000000 / systemConfig.servoPwmRate) - 1;
     TIM_TimeBaseStructure.TIM_Prescaler         = 36 - 1;
     TIM_TimeBaseStructure.TIM_ClockDivision     = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode       = TIM_CounterMode_Up;
     TIM_TimeBaseStructure.TIM_RepetitionCounter = 0x0000;
 
-    TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+    TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
 
     TIM_OCInitStructure.TIM_OCMode       = TIM_OCMode_PWM2;
     TIM_OCInitStructure.TIM_OutputState  = TIM_OutputState_Enable;
@@ -90,10 +97,12 @@ void pwmServoInit(uint16_t servoPwmRate)
     TIM_OCInitStructure.TIM_OCIdleState  = TIM_OCIdleState_Set;
     TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCNIdleState_Reset;
 
-    TIM_OC1Init(TIM2,  &TIM_OCInitStructure);
-	TIM_OC2Init(TIM2,  &TIM_OCInitStructure);
+    TIM_OC1Init(TIM4, &TIM_OCInitStructure);
+	TIM_OC2Init(TIM4, &TIM_OCInitStructure);
+    TIM_OC3Init(TIM4, &TIM_OCInitStructure);
+	TIM_OC4Init(TIM4, &TIM_OCInitStructure);
 
-    TIM_Cmd(TIM2, ENABLE);
+    TIM_Cmd(TIM4, ENABLE);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

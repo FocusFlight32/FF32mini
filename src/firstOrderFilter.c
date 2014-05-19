@@ -148,6 +148,8 @@
 
 void initFirstOrderFilter()
 {
+    float a;
+
     firstOrderFilters[ACCEL500HZ_X_LOWPASS].gx1 = ACCEL500HZ_X_LOWPASS_GX1;
     firstOrderFilters[ACCEL500HZ_X_LOWPASS].gx2 = ACCEL500HZ_X_LOWPASS_GX2;
     firstOrderFilters[ACCEL500HZ_X_LOWPASS].gx3 = ACCEL500HZ_X_LOWPASS_GX3;
@@ -225,6 +227,17 @@ void initFirstOrderFilter()
 	firstOrderFilters[EARTH_AXIS_ACCEL_Z_HIGHPASS].gx3 = EARTH_AXIS_ACCEL_Z_HIGHPASS_GX3;
 	firstOrderFilters[EARTH_AXIS_ACCEL_Z_HIGHPASS].previousInput  = 0.0f;
     firstOrderFilters[EARTH_AXIS_ACCEL_Z_HIGHPASS].previousOutput = 0.0f;
+
+    ///////////////////////////////////
+
+    a = 2.0f * systemConfig.triCopterYawCmd500HzLowPassTau * 500.0f;
+
+    firstOrderFilters[TRICOPTER_YAW_LOWPASS].gx1 = 1.0f / (1.0f + a);
+	firstOrderFilters[TRICOPTER_YAW_LOWPASS].gx2 = 1.0f / (1.0f + a);
+	firstOrderFilters[TRICOPTER_YAW_LOWPASS].gx3 = (1.0f - a) / (1.0f + a);
+	firstOrderFilters[TRICOPTER_YAW_LOWPASS].previousInput  = systemConfig.triYawServoMid;
+    firstOrderFilters[TRICOPTER_YAW_LOWPASS].previousOutput = systemConfig.triYawServoMid;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////

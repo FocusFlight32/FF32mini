@@ -52,3 +52,185 @@
 #define DISABLE_EEPROM      GPIO_SetBits(EEPROM_CS_GPIO,   EEPROM_CS_PIN)
 
 ///////////////////////////////////////////////////////////////////////////////
+// EEPROM Variables
+///////////////////////////////////////////////////////////////////////////////
+
+extern const char rcChannelLetters[8];
+
+void parseRcChannels(const char *input);
+
+///////////////////////////////////////////////////////////////////////////////
+
+enum crcFlags { CRC_HistoryBad = 1 };
+
+///////////////////////////////////////
+
+typedef struct sensorConfig_t
+{
+    uint8_t version;
+
+    float accelBiasMPU[3];          // Bias for MPU60x0 Accel
+    float accelScaleFactorMPU[3];   // Scale factor for MPU60x0 Accel
+
+    float accelTCBiasSlope[3];
+    float accelTCBiasIntercept[3];
+
+    float gyroTCBiasSlope[3];
+    float gyroTCBiasIntercept[3];
+
+    float magBias[3];
+
+    float accelCutoff;
+
+    float KpAcc;
+
+    float KiAcc;
+
+    float KpMag;
+
+    float KiMag;
+
+    float compFilterA;
+
+    float compFilterB;
+
+    uint8_t dlpfSetting;
+
+    ///////////////////////////////////
+
+    uint8_t batteryCells;
+    float   voltageMonitorScale;
+    float   voltageMonitorBias;
+
+    float   batteryLow;
+    float   batteryVeryLow;
+    float   batteryMaxLow;
+
+    ///////////////////////////////////
+
+    uint8_t gpsVelocityHoldOnly;
+    uint8_t verticalVelocityHoldOnly;
+
+    ///////////////////////////////////
+
+    uint8_t  CRCFlags;
+    uint32_t CRCAtEnd[1];
+
+} sensorConfig_t;
+
+////////////////////////////////////////
+
+extern sensorConfig_t sensorConfig;
+
+///////////////////////////////////////////////////////////////////////////////
+
+typedef struct systemConfig_t
+{
+	uint8_t version;
+
+	float rollAndPitchRateScaling;
+
+    float yawRateScaling;
+
+    float attitudeScaling;
+
+    float nDotEdotScaling;
+
+    float hDotScaling;
+
+    ///////////////////////////////////
+
+    uint8_t receiverType;
+
+    uint8_t slaveSpektrum;
+
+    uint8_t rcMap[8];
+
+    uint16_t escPwmRate;
+    uint16_t servoPwmRate;
+
+    float midCommand;
+    float minCheck;
+    float maxCheck;
+    float minThrottle;
+    float maxThrottle;
+
+    ///////////////////////////////////
+
+    uint8_t  mixerConfiguration;
+    float    yawDirection;
+
+    uint16_t triYawServoPwmRate;
+    float    triYawServoMin;
+    float    triYawServoMid;
+    float    triYawServoMax;
+    float    triCopterYawCmd500HzLowPassTau;
+
+    uint8_t  freeMixMotors;
+
+    float    freeMix[6][3];
+
+    ///////////////////////////////////
+
+    PIDdata_t PID[NUMBER_OF_PIDS];
+
+    ///////////////////////////////////
+
+    uint8_t armCount;
+    uint8_t disarmCount;
+
+    ///////////////////////////////////
+
+    uint16_t activeTelemetry;
+
+    uint8_t  mavlinkEnabled;
+
+    ///////////////////////////////////
+
+    uint8_t  CRCFlags;
+    uint32_t CRCAtEnd[1];
+
+} systemConfig_t;
+
+////////////////////////////////////////
+
+extern systemConfig_t systemConfig;
+
+///////////////////////////////////////////////////////////////////////////////
+// Read Sensor EEPROM
+///////////////////////////////////////////////////////////////////////////////
+
+void readSensorEEPROM(void);
+
+///////////////////////////////////////////////////////////////////////////////
+// Write Sensor EEPROM
+///////////////////////////////////////////////////////////////////////////////
+
+void writeSensorEEPROM(void);
+
+///////////////////////////////////////////////////////////////////////////////
+// Check Sensor EEPROM
+///////////////////////////////////////////////////////////////////////////////
+
+void checkSensorEEPROM(bool eepromReset);
+
+///////////////////////////////////////////////////////////////////////////////
+// Read System EEPROM
+///////////////////////////////////////////////////////////////////////////////
+
+void readSystemEEPROM(void);
+
+///////////////////////////////////////////////////////////////////////////////
+// Write System EEPROM
+///////////////////////////////////////////////////////////////////////////////
+
+void writeSystemEEPROM(void);
+
+///////////////////////////////////////////////////////////////////////////////
+// Check System EEPROM
+///////////////////////////////////////////////////////////////////////////////
+
+void checkSystemEEPROM(bool eepromReset);
+
+///////////////////////////////////////////////////////////////////////////////
+

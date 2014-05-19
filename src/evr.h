@@ -74,6 +74,8 @@ enum evrWarnList {
   EVR_BatLow,
   EVR_BatVeryLow,
   EVR_ConfigBadHistory,
+  EVR_ConfigBadSensorHistory,
+  EVR_ConfigBadSystemHistory,
   };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -87,6 +89,8 @@ enum evrErrorList {
   EVR_FlashCRCFail,
   EVR_FlashEraseFail,
   EVR_FlashProgramFail,
+  EVR_SensorCRCFail,
+  EVR_SystemCRCFail,
   };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -170,7 +170,7 @@ void calculateTemperature(void)
 {
     dT                = (int32_t)d2Value - ((int32_t)c5.value << 8);
     ms5611Temperature = 2000 + (int32_t)(((int64_t)dT * c6.value) >> 23);
-    //cliPrintF("%8ld, %8ld, %8ld\n", c5.value, d2Value, dT);
+    //cliPrintF("%8ld, %8ld, %8ld\r\n", c5.value, d2Value, dT);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -218,7 +218,7 @@ void calculatePressureAltitude(void)
 	p = (((d1Value * sensitivity) >> 21) - offset) >> 15;
 
 	sensors.pressureAlt50Hz = 44330.0f * (1.0f - pow((float)p / 101325.0f, 1.0f / 5.255f));
-	//cliPrintF("%9.4f\n", sensors.pressureAlt50Hz);
+	//cliPrintF("%9.4f\r\n", sensors.pressureAlt50Hz);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -284,7 +284,7 @@ void initPressure()
 
     delayMicroseconds(1);
 
-    //cliPrintF("%6ld, %6ld, %6ld, %6ld, %6ld, %6ld\n", c1.value, c2.value, c3.value, c4.value, c5.value, c6.value);
+    //cliPrintF("%6ld, %6ld, %6ld, %6ld, %6ld, %6ld\r\n", c1.value, c2.value, c3.value, c4.value, c5.value, c6.value);
 
     ENABLE_MS5611;                      // Request temperature conversion
     #if   (OSR ==  256)
