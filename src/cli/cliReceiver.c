@@ -49,66 +49,71 @@ void receiverCLI()
     uint8_t  receiverQuery = 'x';
     uint8_t  validQuery    = false;
 
+    NVIC_InitTypeDef  NVIC_InitStructure;
+
     cliBusy = true;
 
-    cliPrint("\nEntering Receiver CLI....\n\n");
+    cliPortPrint("\nEntering Receiver CLI....\n\r\n");
 
     while(true)
     {
-        cliPrint("Receiver CLI -> ");
+        cliPortPrint("Receiver CLI -> ");
 
-		while ((cliAvailable() == false) && (validQuery == false));
+		while ((cliPortAvailable() == false) && (validQuery == false));
 
 		if (validQuery == false)
-		    receiverQuery = cliRead();
+		    receiverQuery = cliPortRead();
 
-		cliPrint("\n");
+		cliPortPrint("\r\n");
 
 		switch(receiverQuery)
 		{
             ///////////////////////////
 
             case 'a': // Receiver Configuration
-                cliPrint("\nReceiver Type:                  ");
-                switch(eepromConfig.receiverType)
+                cliPortPrint("\nReceiver Type:                  ");
+                switch(systemConfig.receiverType)
                 {
                     case PPM:
-                        cliPrint("PPM\n");
+                        cliPortPrint("PPM\r\n");
                         break;
                     case SPEKTRUM:
-                        cliPrint("Spektrum\n");
+                        cliPortPrint("Spektrum\r\n");
                         break;
 		        }
 
-                cliPrint("Current RC Channel Assignment:  ");
+                cliPortPrint("Current RC Channel Assignment:  ");
                 for (index = 0; index < 8; index++)
-                    rcOrderString[eepromConfig.rcMap[index]] = rcChannelLetters[index];
+                    rcOrderString[systemConfig.rcMap[index]] = rcChannelLetters[index];
 
                 rcOrderString[index] = '\0';
 
-                cliPrint(rcOrderString);  cliPrint("\n");
+                cliPortPrint(rcOrderString);  cliPortPrint("\r\n");
 
-                cliPrintF("Secondary Spektrum:             ");
+                cliPortPrintF("Secondary Spektrum:             ");
 
-                if ((eepromConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
-                    cliPrintF("Installed\n");
+                if ((systemConfig.slaveSpektrum == true) && false)  // HJI Inhibit Slave Spektrum on Naze32 Pro
+                    cliPortPrintF("Installed\r\n");
                 else
-                    cliPrintF("Uninstalled\n");
+                    cliPortPrintF("Uninstalled\r\n");
 
-                cliPrintF("Mid Command:                    %4ld\n",   (uint16_t)eepromConfig.midCommand);
-				cliPrintF("Min Check:                      %4ld\n",   (uint16_t)eepromConfig.minCheck);
-				cliPrintF("Max Check:                      %4ld\n",   (uint16_t)eepromConfig.maxCheck);
-				cliPrintF("Min Throttle:                   %4ld\n",   (uint16_t)eepromConfig.minThrottle);
-				cliPrintF("Max Thottle:                    %4ld\n\n", (uint16_t)eepromConfig.maxThrottle);
+                cliPortPrintF("Mid Command:                    %4ld\r\n",   (uint16_t)systemConfig.midCommand);
+				cliPortPrintF("Min Check:                      %4ld\r\n",   (uint16_t)systemConfig.minCheck);
+				cliPortPrintF("Max Check:                      %4ld\r\n",   (uint16_t)systemConfig.maxCheck);
+				cliPortPrintF("Min Throttle:                   %4ld\r\n",   (uint16_t)systemConfig.minThrottle);
+				cliPortPrintF("Max Thottle:                    %4ld\n\r\n", (uint16_t)systemConfig.maxThrottle);
 
-				tempFloat = eepromConfig.rateScaling * 180000.0 / PI;
-				cliPrintF("Max Rate Command:               %6.2f DPS\n", tempFloat);
+				tempFloat = systemConfig.rollAndPitchRateScaling * 180000.0 / PI;
+				cliPortPrintF("Max Roll and Pitch Rate Cmd:    %6.2f DPS\r\n", tempFloat);
 
-				tempFloat = eepromConfig.attitudeScaling * 180000.0 / PI;
-                cliPrintF("Max Attitude Command:           %6.2f Degrees\n\n", tempFloat);
+				tempFloat = systemConfig.yawRateScaling * 180000.0 / PI;
+				cliPortPrintF("Max Yaw Rate Cmd:               %6.2f DPS\r\n", tempFloat);
 
-				cliPrintF("Arm Delay Count:                %3d Frames\n",   eepromConfig.armCount);
-				cliPrintF("Disarm Delay Count:             %3d Frames\n\n", eepromConfig.disarmCount);
+				tempFloat = systemConfig.attitudeScaling * 180000.0 / PI;
+                cliPortPrintF("Max Attitude Cmd:               %6.2f Degrees\n\r\n", tempFloat);
+
+				cliPortPrintF("Arm Delay Count:                %3d Frames\r\n",   systemConfig.armCount);
+				cliPortPrintF("Disarm Delay Count:             %3d Frames\n\r\n", systemConfig.disarmCount);
 
 				validQuery = false;
 				break;
@@ -116,23 +121,44 @@ void receiverCLI()
             ///////////////////////////
 
 			case 'x':
-			    cliPrint("\nExiting Receiver CLI....\n\n");
+			    cliPortPrint("\nExiting Receiver CLI....\n\r\n");
 			    cliBusy = false;
 			    return;
 			    break;
 
             ///////////////////////////
 
-            case 'A': // Read RX Input Type
-                eepromConfig.receiverType = (uint8_t)readFloatCLI();
-			    cliPrint( "\nReceiver Type Changed....\n");
+            case 'A': // Toggle PPM/Spektrum Satellite Receiver
+            	if (systemConfig.receiverType == PPM)
+                {
+                    NVIC_InitStructure.NVIC_IRQChannel                   = TIM1_CC_IRQn;
+                    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+                    NVIC_InitStructure.NVIC_IRQChannelSubPriority        = 0;
+                    NVIC_InitStructure.NVIC_IRQChannelCmd                = DISABLE;
 
-			    cliPrint("\nSystem Resetting....\n");
-			    delay(100);
-			    writeEEPROM();
-			    systemReset(false);
+                    NVIC_Init(&NVIC_InitStructure);
 
-		        break;
+                	TIM_ITConfig(TIM1, TIM_IT_CC1, DISABLE);
+                	systemConfig.receiverType = SPEKTRUM;
+                    spektrumInit();
+                }
+                else
+                {
+                	NVIC_InitStructure.NVIC_IRQChannel                   = TIM1_TRG_COM_TIM17_IRQn;
+                    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+                    NVIC_InitStructure.NVIC_IRQChannelSubPriority        = 0;
+                    NVIC_InitStructure.NVIC_IRQChannelCmd                = DISABLE;
+
+                    NVIC_Init(&NVIC_InitStructure);
+
+                    TIM_ITConfig(TIM17, TIM_IT_Update, DISABLE);
+                  	systemConfig.receiverType = PPM;
+                    ppmRxInit();
+                }
+
+                receiverQuery = 'a';
+                validQuery = true;
+                break;
 
             ///////////////////////////
 
@@ -147,10 +173,10 @@ void receiverCLI()
             ///////////////////////////
 
             case 'C': // Toggle Slave Spektrum State
-                // HJI Inhibit Slave Spektrum on Naze32 Pro if (eepromConfig.slaveSpektrum == true)
-                    eepromConfig.slaveSpektrum = false;
+                // HJI Inhibit Slave Spektrum on Naze32 Pro if (systemConfig.slaveSpektrum == true)
+                systemConfig.slaveSpektrum = false;
                 // HJI Inhibit Slave Spektrum on Naze32 Pro else
-                // HJI Inhibit Slave Spektrum on Naze32 Pro	    eepromConfig.slaveSpektrum = true;
+                // HJI Inhibit Slave Spektrum on Naze32 Pro	    systemConfig.slaveSpektrum = true;
 
                 receiverQuery = 'a';
                 validQuery = true;
@@ -159,11 +185,11 @@ void receiverCLI()
             ///////////////////////////
 
             case 'D': // Read RC Control Points
-                eepromConfig.midCommand   = readFloatCLI();
-    	        eepromConfig.minCheck     = readFloatCLI();
-    		    eepromConfig.maxCheck     = readFloatCLI();
-    		    eepromConfig.minThrottle  = readFloatCLI();
-    		    eepromConfig.maxThrottle  = readFloatCLI();
+                systemConfig.midCommand   = readFloatCLI();
+    	        systemConfig.minCheck     = readFloatCLI();
+    		    systemConfig.maxCheck     = readFloatCLI();
+    		    systemConfig.minThrottle  = readFloatCLI();
+    		    systemConfig.maxThrottle  = readFloatCLI();
 
                 receiverQuery = 'a';
                 validQuery = true;
@@ -172,8 +198,8 @@ void receiverCLI()
             ///////////////////////////
 
             case 'E': // Read Arm/Disarm Counts
-                eepromConfig.armCount    = (uint8_t)readFloatCLI();
-        	    eepromConfig.disarmCount = (uint8_t)readFloatCLI();
+                systemConfig.armCount    = (uint8_t)readFloatCLI();
+        	    systemConfig.disarmCount = (uint8_t)readFloatCLI();
 
                 receiverQuery = 'a';
                 validQuery = true;
@@ -182,7 +208,8 @@ void receiverCLI()
             ///////////////////////////
 
             case 'F': // Read Max Rate Value
-                eepromConfig.rateScaling = readFloatCLI() / 180000.0f * PI;
+                systemConfig.rollAndPitchRateScaling = readFloatCLI() / 180000.0f * PI;
+                systemConfig.yawRateScaling          = readFloatCLI() / 180000.0f * PI;
 
                 receiverQuery = 'a';
                 validQuery = true;
@@ -191,7 +218,7 @@ void receiverCLI()
             ///////////////////////////
 
             case 'G': // Read Max Attitude Value
-                eepromConfig.attitudeScaling = readFloatCLI() / 180000.0f * PI;
+                systemConfig.attitudeScaling = readFloatCLI() / 180000.0f * PI;
 
                 receiverQuery = 'a';
                 validQuery = true;
@@ -199,25 +226,27 @@ void receiverCLI()
 
             ///////////////////////////
 
-            case 'W': // Write EEPROM Parameters
-                cliPrint("\nWriting EEPROM Parameters....\n\n");
-                writeEEPROM();
+            case 'W': // Write System EEPROM Parameters
+                cliPortPrint("\nWriting System EEPROM Parameters....\n\r\n");
+                writeSystemEEPROM();
+
+                validQuery = false;
                 break;
 
 			///////////////////////////
 
 			case '?':
-			   	cliPrint("\n");
-			   	cliPrint("'a' Receiver Configuration Data            'A' Set RX Input Type                    AX, 1=PPM, 2=Spektrum\n");
-   		        cliPrint("                                           'B' Set RC Control Order                 BTAER1234\n");
-			   	cliPrint("                                           'C' Toggle Slave Spektrum State\n");
-			   	cliPrint("                                           'D' Set RC Control Points                EmidCmd;minChk;maxChk;minThrot;maxThrot\n");
-			   	cliPrint("                                           'E' Set Arm/Disarm Counts                FarmCount;disarmCount\n");
-			   	cliPrint("                                           'F' Set Maximum Rate Command\n");
-			   	cliPrint("                                           'G' Set Maximum Attitude Command\n");
-			   	cliPrint("                                           'W' Write EEPROM Parameters\n");
-			   	cliPrint("'x' Exit Receiver CLI                      '?' Command Summary\n");
-			   	cliPrint("\n");
+			   	cliPortPrint("\r\n");
+			   	cliPortPrint("'a' Receiver Configuration Data            'A' Toggle PPM/Spektrum Receiver\r\n");
+   		        cliPortPrint("                                           'B' Set RC Control Order                 BTAER1234\r\n");
+			   	cliPortPrint("                                           'C' Toggle Slave Spektrum State\r\n");
+			   	cliPortPrint("                                           'D' Set RC Control Points                DmidCmd;minChk;maxChk;minThrot;maxThrot\r\n");
+			   	cliPortPrint("                                           'E' Set Arm/Disarm Counts                EarmCount;disarmCount\r\n");
+			   	cliPortPrint("                                           'F' Set Maximum Rate Commands            FRP;Y RP = Roll/Pitch, Y = Yaw\r\n");
+			   	cliPortPrint("                                           'G' Set Maximum Attitude Command\r\n");
+			   	cliPortPrint("                                           'W' Write System EEPROM Parameters\r\n");
+			   	cliPortPrint("'x' Exit Receiver CLI                      '?' Command Summary\r\n");
+			   	cliPortPrint("\r\n");
 	    	    break;
 
 	    	///////////////////////////

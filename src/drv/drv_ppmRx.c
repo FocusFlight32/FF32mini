@@ -115,7 +115,7 @@ void ppmRxInit(void)
 
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource4, GPIO_AF_6);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF_6);
 
     NVIC_InitStructure.NVIC_IRQChannel                   = TIM1_CC_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;

@@ -63,20 +63,20 @@ void computeAxisCommands(float dt)
 {
     if (flightMode == ATTITUDE)
     {
-        attCmd[ROLL ] = rxCommand[ROLL ] * eepromConfig.attitudeScaling;
-        attCmd[PITCH] = rxCommand[PITCH] * eepromConfig.attitudeScaling;
+        attCmd[ROLL ] = rxCommand[ROLL ] * systemConfig.attitudeScaling;
+        attCmd[PITCH] = rxCommand[PITCH] * systemConfig.attitudeScaling;
     }
 
     if (flightMode >= ATTITUDE)
     {
-        attPID[ROLL]  = updatePID( attCmd[ROLL ],  sensors.attitude500Hz[ROLL ], dt, holdIntegrators, &eepromConfig.PID[ROLL_ATT_PID ] );
-        attPID[PITCH] = updatePID( attCmd[PITCH], -sensors.attitude500Hz[PITCH], dt, holdIntegrators, &eepromConfig.PID[PITCH_ATT_PID] );
+        attPID[ROLL]  = updatePID( attCmd[ROLL ],  sensors.attitude500Hz[ROLL ], dt, holdIntegrators, &systemConfig.PID[ROLL_ATT_PID ] );
+        attPID[PITCH] = updatePID( attCmd[PITCH], -sensors.attitude500Hz[PITCH], dt, holdIntegrators, &systemConfig.PID[PITCH_ATT_PID] );
     }
 
     if (flightMode == RATE)
     {
-        rateCmd[ROLL ] = rxCommand[ROLL ] * eepromConfig.rateScaling;
-        rateCmd[PITCH] = rxCommand[PITCH] * eepromConfig.rateScaling;
+        rateCmd[ROLL ] = rxCommand[ROLL ] * systemConfig.rollAndPitchRateScaling;
+        rateCmd[PITCH] = rxCommand[PITCH] * systemConfig.rollAndPitchRateScaling;
     }
     else
     {
@@ -87,15 +87,15 @@ void computeAxisCommands(float dt)
     ///////////////////////////////////
 
     if (headingHoldEngaged == true)  // Heading Hold is ON
-        rateCmd[YAW] = updatePID( headingReference, heading.mag, dt, holdIntegrators, &eepromConfig.PID[HEADING_PID] );
+        rateCmd[YAW] = updatePID( headingReference, heading.mag, dt, holdIntegrators, &systemConfig.PID[HEADING_PID] );
     else                             // Heading Hold is OFF
-        rateCmd[YAW] = rxCommand[YAW] * eepromConfig.rateScaling;
+        rateCmd[YAW] = rxCommand[YAW] * systemConfig.yawRateScaling;
 
     ///////////////////////////////////
 
-    axisPID[ROLL ] = updatePID( rateCmd[ROLL ],  sensors.gyro500Hz[ROLL ], dt, holdIntegrators, &eepromConfig.PID[ROLL_RATE_PID ] );
-    axisPID[PITCH] = updatePID( rateCmd[PITCH], -sensors.gyro500Hz[PITCH], dt, holdIntegrators, &eepromConfig.PID[PITCH_RATE_PID] );
-    axisPID[YAW  ] = updatePID( rateCmd[YAW  ],  sensors.gyro500Hz[YAW  ], dt, holdIntegrators, &eepromConfig.PID[YAW_RATE_PID  ] );
+    axisPID[ROLL ] = updatePID( rateCmd[ROLL ],  sensors.gyro500Hz[ROLL ], dt, holdIntegrators, &systemConfig.PID[ROLL_RATE_PID ] );
+    axisPID[PITCH] = updatePID( rateCmd[PITCH], -sensors.gyro500Hz[PITCH], dt, holdIntegrators, &systemConfig.PID[PITCH_RATE_PID] );
+    axisPID[YAW  ] = updatePID( rateCmd[YAW  ],  sensors.gyro500Hz[YAW  ], dt, holdIntegrators, &systemConfig.PID[YAW_RATE_PID  ] );
 
     ///////////////////////////////////
 
@@ -109,14 +109,14 @@ void computeAxisCommands(float dt)
             (verticalModeState == ALT_DISENGAGED_THROTTLE_INACTIVE))
         {
 
-			verticalVelocityCmd = updatePID( altitudeHoldReference, hEstimate, dt, holdIntegrators, &eepromConfig.PID[H_PID] );
+			verticalVelocityCmd = updatePID( altitudeHoldReference, hEstimate, dt, holdIntegrators, &systemConfig.PID[H_PID] );
 		}
         else                                                            // Vertical Velocity Hold is ON
         {
-            verticalVelocityCmd = verticalReferenceCommand * eepromConfig.hDotScaling;
+            verticalVelocityCmd = verticalReferenceCommand * systemConfig.hDotScaling;
         }
 
-    	throttleCmd = throttleReference + updatePID( verticalVelocityCmd, hDotEstimate, dt, holdIntegrators, &eepromConfig.PID[HDOT_PID] );
+    	throttleCmd = throttleReference + updatePID( verticalVelocityCmd, hDotEstimate, dt, holdIntegrators, &systemConfig.PID[HDOT_PID] );
 	}
 }
 

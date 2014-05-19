@@ -352,7 +352,7 @@ uint8_t usbIsConfigured()
 
 /*******************************************************************************
 * Function Name  : usbIsConnected.
-* Description    : Determines if USB VCP is connected ot not
+* Description    : Determines if USB VCP is connected or not
 * Input          : None.
 * Output         : None.
 * Return         : True if connected.

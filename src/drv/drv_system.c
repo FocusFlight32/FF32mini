@@ -115,6 +115,7 @@ void SysTick_Handler(void)
 
     if ((systemReady        == true)  &&
         (cliBusy            == false) &&
+        (accelCalibrating   == false) &&
         (escCalibrating     == false) &&
         (magCalibrating     == false) &&
         (mpu6000Calibrating == false))
@@ -272,6 +273,10 @@ void checkResetType(void)
 
 void systemInit(void)
 {
+	RCC_ClocksTypeDef rccClocks;
+
+	///////////////////////////////////
+
 	// Init cycle counter
     cycleCounterInit();
 
@@ -281,7 +286,7 @@ void systemInit(void)
     // Turn on peripherial clocks
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12,    ENABLE);
 
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,     ENABLE);  // USART1
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,     ENABLE);  // USART1, USART2
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2,     ENABLE);  // ADC2
 
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA,    ENABLE);
@@ -290,56 +295,125 @@ void systemInit(void)
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2,   ENABLE);
 
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,   ENABLE);  // PWM Servo Out 1 & 2
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,   ENABLE);  // PWM ESC Out 3 & 4
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4,   ENABLE);  // PWM ESC Out 5,6,7, & 8
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1,   ENABLE);  // PPM RX
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,   ENABLE);  // PWM ESC Out 1 & 2
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,   ENABLE);  // PWM ESC Out 5 & 6
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4,   ENABLE);  // PWM Servo Out 1, 2, 3, & 4
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6,   ENABLE);  // 500 Hz dt Counter
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7,   ENABLE);  // 100 Hz dt Counter
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM15,  ENABLE);  // PWM ESC Out 1 & 2
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM16,  ENABLE);  // PPM RX
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17,  ENABLE);  // Spektrum Frame Sync
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM15,  ENABLE);  // PWM ESC Out 3 & 4
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM16,  ENABLE);  // RangeFinder PWM
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM17,  ENABLE);  // Spektrum Frame Sync
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);  // Telemetry
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);  // GPS
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);  // Spektrum RX
 
     ///////////////////////////////////////////////////////////////////////////
 
-    checkFirstTime(false);
-	readEEPROM();
+    spiInit(SPI2);
 
-	if (eepromConfig.receiverType == SPEKTRUM)
+    ///////////////////////////////////
+
+    checkSensorEEPROM(false);
+	checkSystemEEPROM(false);
+
+	readSensorEEPROM();
+	readSystemEEPROM();
+
+	///////////////////////////////////
+
+	if (systemConfig.receiverType == SPEKTRUM)
 		checkSpektrumBind();
 
-    checkResetType();
+    ///////////////////////////////////
+
+	checkResetType();
 
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);  // 2 bits for pre-emption priority, 2 bits for subpriority
 
+	///////////////////////////////////
+
+	gpsPortClearBuffer       = &uart2ClearBuffer;
+    gpsPortNumCharsAvailable = &uart2NumCharsAvailable;
+    gpsPortPrintBinary       = &uart2PrintBinary;
+    gpsPortRead              = &uart2Read;
+
+    telemPortAvailable       = &uart1Available;
+    telemPortPrint           = &uart1Print;
+    telemPortPrintF          = &uart1PrintF;
+    telemPortRead            = &uart1Read;
+
+	///////////////////////////////////
+
 	initMixer();
 
-	cliInit();
+	usbInit();
+
 	gpioInit();
-    telemetryInit();
-    adcInit();
+
+	uart1Init();
+    uart2Init();
 
     LED0_OFF;
 
-    delay(20000);  // 20 sec total delay for sensor stabilization - probably not long enough.....
+    delay(10000);  // 10 seconds of 20 second delay for sensor stabilization
 
-    LED0_ON;
+    checkUsbActive();
 
-    batteryInit();
-    pwmServoInit(eepromConfig.servoPwmRate);
+    ///////////////////////////////////
 
-    if (eepromConfig.receiverType == SPEKTRUM)
+    #ifdef __VERSION__
+        cliPortPrintF("\ngcc version " __VERSION__ "\r\n");
+    #endif
+
+    cliPortPrintF("\nFF32mini Firmware V%s, Build Date " __DATE__ " "__TIME__" \r\n", __FF32MINI_VERSION);
+
+    if ((RCC->CR & RCC_CR_HSERDY) != RESET)
+    {
+        cliPortPrint("\nRunning on external HSE clock....\r\n");
+    }
+    else
+    {
+        cliPortPrint("\nERROR: Running on internal HSI clock....\r\n");
+    }
+
+    RCC_GetClocksFreq(&rccClocks);
+
+    cliPortPrintF("\nHCLK->   %2d MHz\r\n",   rccClocks.HCLK_Frequency   / 1000000);
+    cliPortPrintF(  "PCLK1->  %2d MHz\r\n",   rccClocks.PCLK1_Frequency  / 1000000);
+    cliPortPrintF(  "PCLK2->  %2d MHz\r\n",   rccClocks.PCLK2_Frequency  / 1000000);
+    cliPortPrintF(  "SYSCLK-> %2d MHz\n\r\n", rccClocks.SYSCLK_Frequency / 1000000);
+
+    if (systemConfig.receiverType == PPM)
+    	cliPortPrint("Using PPM Receiver....\n\r\n");
+    else
+    	cliPortPrint("Using Spektrum Satellite Receiver....\n\r\n");
+
+    initUBLOX();
+
+    delay(10000);  // Remaining 10 seconds of 20 second delay for sensor stabilization - probably not long enough..
+
+    ///////////////////////////////////
+
+	adcInit();
+    aglInit();
+    pwmServoInit();
+
+    if (systemConfig.receiverType == SPEKTRUM)
         spektrumInit();
     else
         ppmRxInit();
 
-    spiInit(SPI2);
     timingFunctionsInit();
 
+    batteryInit();
+
     initFirstOrderFilter();
+    initMavlink();
     initPID();
+
+    LED0_ON;
 
     initMPU6000();
     initMag();

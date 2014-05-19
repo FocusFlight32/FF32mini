@@ -58,13 +58,13 @@ void mpu6000Calibration(void)
 
     mpu6000Calibrating = true;
 
-    cliPrint("\nMPU6000 Calibration:\n");
+    cliPortPrint("\nMPU6000 Calibration:\r\n");
 
     ///////////////////////////////////
     // Get samples at temperature1
     ///////////////////////////////////
 
-    cliPrint("\nBegin 1st MPU6000 Measurements...\n");
+    cliPortPrint("\nBegin 1st MPU6000 Measurements...\r\n");
     for (index = 0; index < numberOfSamples; index++)
     {
         readMPU6000();
@@ -90,23 +90,23 @@ void mpu6000Calibration(void)
     gyroBias1[YAW  ]    /= (float) numberOfSamples;
     mpu6000Temperature1 /= (float) numberOfSamples;
 
-    cliPrintF("\nGyro Temperature Reading: %6.2f", mpu6000Temperature1);
+    cliPortPrintF("\nGyro Temperature Reading: %6.2f", mpu6000Temperature1);
 
-    cliPrint("\n\nEnd 1st MPU6000 Measurements\n");
+    cliPortPrint("\n\nEnd 1st MPU6000 Measurements\r\n");
 
     ///////////////////////////////////
     // Time delay for temperature
     // Stabilization
     ///////////////////////////////////
 
-    cliPrint("\nWaiting for 10 minutes for MPU6000 temp to rise...\n");
+    cliPortPrint("\nWaiting for 10 minutes for MPU6000 temp to rise...\r\n");
     delay(600000);    // Number of mSec in 10 minutes
 
     ///////////////////////////////////
     // Get samples at temperature2
     ///////////////////////////////////
 
-    cliPrint("\nBegin 2nd MPU6000 Measurements...\n");
+    cliPortPrint("\nBegin 2nd MPU6000 Measurements...\r\n");
     for (index = 0; index < numberOfSamples; index++)
     {
         readMPU6000();
@@ -132,31 +132,31 @@ void mpu6000Calibration(void)
     gyroBias2[YAW  ]    /= (float) numberOfSamples;
     mpu6000Temperature2 /= (float) numberOfSamples;
 
-    cliPrintF("\nGyro Temperature Reading: %6.2f", mpu6000Temperature2);
+    cliPortPrintF("\nGyro Temperature Reading: %6.2f", mpu6000Temperature2);
 
-    cliPrint("\n\nEnd 2st MPU6000 Measurements\n");
-
-    ///////////////////////////////////
-
-    eepromConfig.accelTCBiasSlope[XAXIS]     = (accelBias2[XAXIS] - accelBias1[XAXIS]) / (mpu6000Temperature2 - mpu6000Temperature1);
-    eepromConfig.accelTCBiasSlope[YAXIS]     = (accelBias2[YAXIS] - accelBias1[YAXIS]) / (mpu6000Temperature2 - mpu6000Temperature1);
-    eepromConfig.accelTCBiasSlope[ZAXIS]     = (accelBias2[ZAXIS] - accelBias1[ZAXIS]) / (mpu6000Temperature2 - mpu6000Temperature1);
-
-    eepromConfig.accelTCBiasIntercept[XAXIS] = accelBias2[XAXIS] - eepromConfig.accelTCBiasSlope[XAXIS] * mpu6000Temperature2;
-    eepromConfig.accelTCBiasIntercept[YAXIS] = accelBias2[YAXIS] - eepromConfig.accelTCBiasSlope[YAXIS] * mpu6000Temperature2;
-    eepromConfig.accelTCBiasIntercept[ZAXIS] = accelBias2[ZAXIS] - eepromConfig.accelTCBiasSlope[ZAXIS] * mpu6000Temperature2;
-
-    eepromConfig.gyroTCBiasSlope[ROLL ]      = (gyroBias2[ROLL ] - gyroBias1[ROLL ]) / (mpu6000Temperature2 - mpu6000Temperature1);
-    eepromConfig.gyroTCBiasSlope[PITCH]      = (gyroBias2[PITCH] - gyroBias1[PITCH]) / (mpu6000Temperature2 - mpu6000Temperature1);
-    eepromConfig.gyroTCBiasSlope[YAW  ]      = (gyroBias2[YAW  ] - gyroBias1[YAW  ]) / (mpu6000Temperature2 - mpu6000Temperature1);
-
-    eepromConfig.gyroTCBiasIntercept[ROLL ]  = gyroBias2[ROLL ] - eepromConfig.gyroTCBiasSlope[ROLL ] * mpu6000Temperature2;
-    eepromConfig.gyroTCBiasIntercept[PITCH]  = gyroBias2[PITCH] - eepromConfig.gyroTCBiasSlope[PITCH] * mpu6000Temperature2;
-    eepromConfig.gyroTCBiasIntercept[YAW  ]  = gyroBias2[YAW  ] - eepromConfig.gyroTCBiasSlope[YAW  ] * mpu6000Temperature2;
+    cliPortPrint("\n\nEnd 2st MPU6000 Measurements\r\n");
 
     ///////////////////////////////////
 
-    cliPrint("\nMPU6000 Calibration Complete.\n\n");
+    sensorConfig.accelTCBiasSlope[XAXIS]     = (accelBias2[XAXIS] - accelBias1[XAXIS]) / (mpu6000Temperature2 - mpu6000Temperature1);
+    sensorConfig.accelTCBiasSlope[YAXIS]     = (accelBias2[YAXIS] - accelBias1[YAXIS]) / (mpu6000Temperature2 - mpu6000Temperature1);
+    sensorConfig.accelTCBiasSlope[ZAXIS]     = (accelBias2[ZAXIS] - accelBias1[ZAXIS]) / (mpu6000Temperature2 - mpu6000Temperature1);
+
+    sensorConfig.accelTCBiasIntercept[XAXIS] = accelBias2[XAXIS] - sensorConfig.accelTCBiasSlope[XAXIS] * mpu6000Temperature2;
+    sensorConfig.accelTCBiasIntercept[YAXIS] = accelBias2[YAXIS] - sensorConfig.accelTCBiasSlope[YAXIS] * mpu6000Temperature2;
+    sensorConfig.accelTCBiasIntercept[ZAXIS] = accelBias2[ZAXIS] - sensorConfig.accelTCBiasSlope[ZAXIS] * mpu6000Temperature2;
+
+    sensorConfig.gyroTCBiasSlope[ROLL ]      = (gyroBias2[ROLL ] - gyroBias1[ROLL ]) / (mpu6000Temperature2 - mpu6000Temperature1);
+    sensorConfig.gyroTCBiasSlope[PITCH]      = (gyroBias2[PITCH] - gyroBias1[PITCH]) / (mpu6000Temperature2 - mpu6000Temperature1);
+    sensorConfig.gyroTCBiasSlope[YAW  ]      = (gyroBias2[YAW  ] - gyroBias1[YAW  ]) / (mpu6000Temperature2 - mpu6000Temperature1);
+
+    sensorConfig.gyroTCBiasIntercept[ROLL ]  = gyroBias2[ROLL ] - sensorConfig.gyroTCBiasSlope[ROLL ] * mpu6000Temperature2;
+    sensorConfig.gyroTCBiasIntercept[PITCH]  = gyroBias2[PITCH] - sensorConfig.gyroTCBiasSlope[PITCH] * mpu6000Temperature2;
+    sensorConfig.gyroTCBiasIntercept[YAW  ]  = gyroBias2[YAW  ] - sensorConfig.gyroTCBiasSlope[YAW  ] * mpu6000Temperature2;
+
+    ///////////////////////////////////
+
+    cliPortPrint("\nMPU6000 Calibration Complete.\n\r\n");
 
     mpu6000Calibrating = false;
 }

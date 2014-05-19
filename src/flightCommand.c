@@ -84,26 +84,28 @@ void processFlightCommands(void)
 {
     uint8_t channel;
 
+    float hdgDelta, simpleX, simpleY;
+
     if (rcActive == true)
     {
 		// Read receiver commands
         for (channel = 0; channel < 8; channel++)
         {
-			if (eepromConfig.receiverType == SPEKTRUM)
-			    rxCommand[channel] = (float)spektrumRead(eepromConfig.rcMap[channel]);
+			if (systemConfig.receiverType == SPEKTRUM)
+			    rxCommand[channel] = (float)spektrumRead(systemConfig.rcMap[channel]);
 			else
-			    rxCommand[channel] = (float)ppmRxRead(eepromConfig.rcMap[channel]);
+			    rxCommand[channel] = (float)ppmRxRead(systemConfig.rcMap[channel]);
         }
 
-        rxCommand[ROLL]  -= eepromConfig.midCommand;                  // Roll Range    -1000:1000
-        rxCommand[PITCH] -= eepromConfig.midCommand;                  // Pitch Range   -1000:1000
-        rxCommand[YAW]   -= eepromConfig.midCommand;                  // Yaw Range     -1000:1000
+        rxCommand[ROLL]  -= systemConfig.midCommand;                  // Roll Range    -1000:1000
+        rxCommand[PITCH] -= systemConfig.midCommand;                  // Pitch Range   -1000:1000
+        rxCommand[YAW]   -= systemConfig.midCommand;                  // Yaw Range     -1000:1000
 
-        rxCommand[THROTTLE] -= eepromConfig.midCommand - MIDCOMMAND;  // Throttle Range 2000:4000
-        rxCommand[AUX1]     -= eepromConfig.midCommand - MIDCOMMAND;  // Aux1 Range     2000:4000
-        rxCommand[AUX2]     -= eepromConfig.midCommand - MIDCOMMAND;  // Aux2 Range     2000:4000
-        rxCommand[AUX3]     -= eepromConfig.midCommand - MIDCOMMAND;  // Aux3 Range     2000:4000
-        rxCommand[AUX4]     -= eepromConfig.midCommand - MIDCOMMAND;  // Aux4 Range     2000:4000
+        rxCommand[THROTTLE] -= systemConfig.midCommand - MIDCOMMAND;  // Throttle Range 2000:4000
+        rxCommand[AUX1]     -= systemConfig.midCommand - MIDCOMMAND;  // Aux1 Range     2000:4000
+        rxCommand[AUX2]     -= systemConfig.midCommand - MIDCOMMAND;  // Aux2 Range     2000:4000
+        rxCommand[AUX3]     -= systemConfig.midCommand - MIDCOMMAND;  // Aux3 Range     2000:4000
+        rxCommand[AUX4]     -= systemConfig.midCommand - MIDCOMMAND;  // Aux4 Range     2000:4000
     }
 
     // Set past command in detent values
@@ -135,14 +137,14 @@ void processFlightCommands(void)
     ///////////////////////////////////
 
     // Check for low throttle
-    if ( rxCommand[THROTTLE] < eepromConfig.minCheck )
+    if ( rxCommand[THROTTLE] < systemConfig.minCheck )
     {
 		// Check for disarm command ( low throttle, left yaw )
-		if (((rxCommand[YAW] < (eepromConfig.minCheck - MIDCOMMAND)) && (armed == true)) && (verticalModeState == ALT_DISENGAGED_THROTTLE_ACTIVE))
+		if (((rxCommand[YAW] < (systemConfig.minCheck - MIDCOMMAND)) && (armed == true)) && (verticalModeState == ALT_DISENGAGED_THROTTLE_ACTIVE))
 		{
 			disarmingTimer++;
 
-			if (disarmingTimer > eepromConfig.disarmCount)
+			if (disarmingTimer > systemConfig.disarmCount)
 			{
 				zeroPIDintegralError();
 			    zeroPIDstates();
@@ -156,20 +158,20 @@ void processFlightCommands(void)
 		}
 
 		// Check for gyro bias command ( low throttle, left yaw, aft pitch, right roll )
-		if ( (rxCommand[YAW  ] < (eepromConfig.minCheck - MIDCOMMAND)) &&
-		     (rxCommand[ROLL ] > (eepromConfig.maxCheck - MIDCOMMAND)) &&
-		     (rxCommand[PITCH] < (eepromConfig.minCheck - MIDCOMMAND)) )
+		if ( (rxCommand[YAW  ] < (systemConfig.minCheck - MIDCOMMAND)) &&
+		     (rxCommand[ROLL ] > (systemConfig.maxCheck - MIDCOMMAND)) &&
+		     (rxCommand[PITCH] < (systemConfig.minCheck - MIDCOMMAND)) )
 		{
 			computeMPU6000RTData();
 			pulseMotors(3);
 		}
 
 		// Check for arm command ( low throttle, right yaw)
-		if ((rxCommand[YAW] > (eepromConfig.maxCheck - MIDCOMMAND) ) && (armed == false) && (execUp == true))
+		if ((rxCommand[YAW] > (systemConfig.maxCheck - MIDCOMMAND) ) && (armed == false) && (execUp == true))
 		{
 			armingTimer++;
 
-			if (armingTimer > eepromConfig.armCount)
+			if (armingTimer > systemConfig.armCount)
 			{
 				zeroPIDintegralError();
 				zeroPIDstates();
@@ -187,7 +189,7 @@ void processFlightCommands(void)
 
 	// Check for armed true and throttle command > minThrottle
 
-    if ((armed == true) && (rxCommand[THROTTLE] > eepromConfig.minThrottle))
+    if ((armed == true) && (rxCommand[THROTTLE] > systemConfig.minThrottle))
     	holdIntegrators = false;
     else
     	holdIntegrators = true;
@@ -236,9 +238,28 @@ void processFlightCommands(void)
 
 	///////////////////////////////////
 
+	// Simple Mode Command Processing
+
+	if (rxCommand[AUX3] > MIDCOMMAND)
+	{
+        hdgDelta = sensors.attitude500Hz[YAW] - homeData.magHeading;
+
+        hdgDelta = standardRadianFormat(hdgDelta);
+
+        simpleX = cosf(hdgDelta) * rxCommand[PITCH] + sinf(hdgDelta) * rxCommand[ROLL ];
+
+        simpleY = cosf(hdgDelta) * rxCommand[ROLL ] - sinf(hdgDelta) * rxCommand[PITCH];
+
+        rxCommand[ROLL ] = simpleY;
+
+        rxCommand[PITCH] = simpleX;
+	}
+
+	///////////////////////////////////
+
 	// Vertical Mode Command Processing
 
-	verticalReferenceCommand = rxCommand[THROTTLE] - eepromConfig.midCommand;
+	verticalReferenceCommand = rxCommand[THROTTLE] - MIDCOMMAND;
 
     // Set past altitude reference in detent value
     previousVertRefCmdInDetent = vertRefCmdInDetent;
@@ -285,7 +306,7 @@ void processFlightCommands(void)
 		///////////////////////////////
 
 		case ALT_HOLD_FIXED_AT_ENGAGEMENT_ALT:
-		    if ((vertRefCmdInDetent == true) || eepromConfig.verticalVelocityHoldOnly)
+		    if ((vertRefCmdInDetent == true) || sensorConfig.verticalVelocityHoldOnly)
 		        verticalModeState = ALT_HOLD_AT_REFERENCE_ALTITUDE;
 
 		    if ((rxCommand[AUX2] <= MIDCOMMAND) && (previousAUX2State > MIDCOMMAND))  // AUX2 Falling edge detection
@@ -299,7 +320,7 @@ void processFlightCommands(void)
 		///////////////////////////////
 
 		case ALT_HOLD_AT_REFERENCE_ALTITUDE:
-		    if ((vertRefCmdInDetent == false) || eepromConfig.verticalVelocityHoldOnly)
+		    if ((vertRefCmdInDetent == false) || sensorConfig.verticalVelocityHoldOnly)
 		        verticalModeState = VERTICAL_VELOCITY_HOLD_AT_REFERENCE_VELOCITY;
 
 		    if ((rxCommand[AUX2] <= MIDCOMMAND) && (previousAUX2State > MIDCOMMAND))  // AUX2 Falling edge detection
@@ -313,7 +334,7 @@ void processFlightCommands(void)
 		///////////////////////////////
 
 		case VERTICAL_VELOCITY_HOLD_AT_REFERENCE_VELOCITY:
-		    if ((vertRefCmdInDetent == true) && !eepromConfig.verticalVelocityHoldOnly)
+		    if ((vertRefCmdInDetent == true) && !sensorConfig.verticalVelocityHoldOnly)
 		    {
 				verticalModeState = ALT_HOLD_AT_REFERENCE_ALTITUDE;
 				altitudeHoldReference = hEstimate;
@@ -335,7 +356,7 @@ void processFlightCommands(void)
 
 		case ALT_DISENGAGED_THROTTLE_INACTIVE:
 			if (((rxCommand[THROTTLE] < throttleCmd + THROTTLE_WINDOW) && (rxCommand[THROTTLE] > throttleCmd - THROTTLE_WINDOW)) ||
-			    eepromConfig.verticalVelocityHoldOnly)
+			    sensorConfig.verticalVelocityHoldOnly)
 			    verticalModeState = ALT_DISENGAGED_THROTTLE_ACTIVE;
 
 			if ((rxCommand[AUX2] > MIDCOMMAND) && (previousAUX2State <= MIDCOMMAND))  // AUX2 Rising edge detection

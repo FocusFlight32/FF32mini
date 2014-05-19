@@ -60,11 +60,11 @@ void vertCompFilter(float dt)
 
 	if (execUp == true)
     {
-    	accelZ = -earthAxisAccels[ZAXIS] + eepromConfig.compFilterB * estimationError;
+    	accelZ = -earthAxisAccels[ZAXIS] + sensorConfig.compFilterB * estimationError;
 
         hDotEstimate += accelZ * dt;
 
-        hEstimate += (hDotEstimate + eepromConfig.compFilterA * estimationError) * dt;
+        hEstimate += (hDotEstimate + sensorConfig.compFilterA * estimationError) * dt;
 
         estimationError = sensors.pressureAlt50Hz - hEstimate;
     }

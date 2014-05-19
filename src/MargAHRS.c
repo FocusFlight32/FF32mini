@@ -163,8 +163,8 @@ void MargAHRSupdate(float gx, float gy, float gz,
         if (norm != 0.0f)
         {
 			calculateAccConfidence(norm);
-            kpAcc = eepromConfig.KpAcc * accConfidence;
-            kiAcc = eepromConfig.KiAcc * accConfidence;
+            kpAcc = sensorConfig.KpAcc * accConfidence;
+            kiAcc = sensorConfig.KiAcc * accConfidence;
 
             normR = 1.0f / norm;
             ax *= normR;
@@ -234,15 +234,15 @@ void MargAHRSupdate(float gx, float gy, float gz,
 			// use un-extrapolated old values between magnetometer updates
 			// dubious as dT does not apply to the magnetometer calculation so
 			// time scaling is embedded in KpMag and KiMag
-			gx += exMag * eepromConfig.KpMag;
-			gy += eyMag * eepromConfig.KpMag;
-			gz += ezMag * eepromConfig.KpMag;
+			gx += exMag * sensorConfig.KpMag;
+			gy += eyMag * sensorConfig.KpMag;
+			gz += ezMag * sensorConfig.KpMag;
 
-			if (eepromConfig.KiMag > 0.0f)
+			if (sensorConfig.KiMag > 0.0f)
 			{
-				exMagInt += exMag * eepromConfig.KiMag;
-				eyMagInt += eyMag * eepromConfig.KiMag;
-				ezMagInt += ezMag * eepromConfig.KiMag;
+				exMagInt += exMag * sensorConfig.KiMag;
+				eyMagInt += eyMag * sensorConfig.KiMag;
+				ezMagInt += ezMag * sensorConfig.KiMag;
 
 				gx += exMagInt;
 				gy += eyMagInt;
@@ -286,7 +286,7 @@ void MargAHRSupdate(float gx, float gy, float gz,
 		sensors.attitude500Hz[YAW  ] = atan2f( 2.0f * (q1q2 + q0q3), q0q0 + q1q1 - q2q2 - q3q3 );
 
 		heading.mag = sensors.attitude500Hz[YAW];
-		heading.tru = standardRadianFormat(heading.mag + eepromConfig.magVar);
+		// TODO heading.tru = TBD;
     }
 }
 

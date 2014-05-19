@@ -147,7 +147,7 @@ void spiInit(SPI_TypeDef *SPIx)
         SPI_InitStructure.SPI_CPOL              = SPI_CPOL_High;
         SPI_InitStructure.SPI_CPHA              = SPI_CPHA_2Edge;
         SPI_InitStructure.SPI_NSS               = SPI_NSS_Soft;
-        SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_64;  // 36/64 = 0.5625 MHz SPI Clock
+        SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;  // 36/2 = 18 MHz SPI Clock
         SPI_InitStructure.SPI_FirstBit          = SPI_FirstBit_MSB;
         SPI_InitStructure.SPI_CRCPolynomial     = 7;
 
